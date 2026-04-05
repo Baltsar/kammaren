@@ -147,6 +147,22 @@ The trust layer. Every skill must pass golden test cases before shipping.
 
 Pattern: write golden cases FIRST, then build the skill. If the skill produces a different number than Skatteverket, the test fails. No exceptions.
 
+```
+$ bun test verify/
+
+  regelversion      3/3   PASS
+  ag-avgifter      19/19  PASS
+  moms             34/34  PASS
+  bolagsskatt      46/46  PASS
+  k10              34/34  PASS
+  integration      13/13  PASS
+  cross-validation  6/6   PASS
+  year-guard        3/3   PASS
+  stress          100/100  PASS
+  ──────────────────────────────
+  258/258 PASS  0 FAIL  0 SKIP
+```
+
 ### Constants
 
 Year-specific. Version-controlled. Every number traced to its legal source.
