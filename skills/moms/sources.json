@@ -1,0 +1,32 @@
+[
+  {
+    "name": "Mervärdesskattelagen (2023:200) 7 kap 1 §",
+    "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/mervardesskattlag-2023200_sfs-2023-200/",
+    "date": "2026-01-01",
+    "note": "Momssatser: 25% generell, 12% livsmedel/hotell, 6% böcker/transport/kultur"
+  },
+  {
+    "name": "Mervärdesskattelagen (2023:200) 3 kap — Undantag",
+    "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/mervardesskattlag-2023200_sfs-2023-200/",
+    "date": "2026-01-01",
+    "note": "Undantag från momsplikt — 0%: sjukvård, utbildning, bank/finans, försäkring, export"
+  },
+  {
+    "name": "Mervärdesskattelagen (2023:200) 1 kap 2 § — Omvänd skattskyldighet",
+    "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/mervardesskattlag-2023200_sfs-2023-200/",
+    "date": "2026-01-01",
+    "note": "Omvänd skattskyldighet: köparen redovisar moms. Gäller bl.a. byggsektorn och viss handel."
+  },
+  {
+    "name": "Skatteverket: Mervärdesskatt (moms) — satser och beräkning",
+    "url": "https://skatteverket.se/foretag/moms/momssatser.4.18e1b10334ebe8bc80003502.html",
+    "date": "2026-01-01",
+    "note": "Webbsida med gällande momssatser och beräkningsprinciper 2026"
+  },
+  {
+    "name": "BAS 2026 kontoplan — konton 2610-2634",
+    "url": "https://www.bas.se/kontoplan/",
+    "date": "2026-01-01",
+    "note": "2610 utgående moms 25%, 2620 12%, 2630 6%, 2614/2624/2634 omvänd skattskyldighet"
+  }
+]

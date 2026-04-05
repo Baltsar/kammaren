@@ -1,0 +1,22 @@
+{
+  "sources": [
+    {
+      "name": "Skatteverket — 3:12-reglerna",
+      "url": "https://www.skatteverket.se/privat/skatter/arbeteochinkomst/inkomster/delägareifamansforetag.html",
+      "date": "2026-01-01",
+      "verified": true
+    },
+    {
+      "name": "Skatteverket — Inkomstbasbelopp (IBB)",
+      "url": "https://www.skatteverket.se/privat/skatter/beloppochprocent/inkomstbasbelopp.html",
+      "date": "2026-01-01",
+      "verified": true
+    },
+    {
+      "name": "Skatteverket — Kommunala skattesatser",
+      "url": "https://www.skatteverket.se/privat/skatter/beloppochprocent/skattesatser.html",
+      "date": "2026-01-01",
+      "verified": true
+    }
+  ]
+}

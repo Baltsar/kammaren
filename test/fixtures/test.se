@@ -1,0 +1,25 @@
+#FLAGGA 0
+#PROGRAM "TestProg" 1.0
+#FORMAT PC8
+#GEN 20260310
+#SIETYP 4
+#ORGNR 559123-4567
+#FNAMN "Test AB"
+#RAR 0 20260101 20261231
+#KONTO 1930 "Bankkonto"
+#KONTO 3010 "Försäljning tjänster"
+#KONTO 2610 "Utgående moms"
+#KONTO 1510 "Kundfordringar"
+#KONTO 5010 "Lokalhyra"
+#IB 0 1930 50000.00
+#VER A 1 20260105 "Kundfaktura 001"
+{
+  #TRANS 1510 {} 125000.00
+  #TRANS 3010 {} -100000.00
+  #TRANS 2610 {} -25000.00
+}
+#VER A 2 20260115 "Kontorshyra"
+{
+  #TRANS 5010 {} 8000.00
+  #TRANS 1930 {} -8000.00
+}

@@ -1,0 +1,65 @@
+{
+  "description": "Golden test cases — manuellt verifierade mot Skatteverket. Expected fylls i vid migrering.",
+  "cases": [
+    {
+      "id": "REF1",
+      "name": "Stockholm 660K, ej kyrka",
+      "input": {
+        "bruttolön": 660000,
+        "revenue": 2000000,
+        "costs": 800000,
+        "church_member": false,
+        "kommun": "Stockholm"
+      },
+      "expected": null
+    },
+    {
+      "id": "REF2",
+      "name": "Stockholm 592K (SGI_MAX), ej kyrka",
+      "input": {
+        "bruttolön": 592000,
+        "revenue": 2000000,
+        "costs": 800000,
+        "church_member": false,
+        "kommun": "Stockholm"
+      },
+      "expected": null
+    },
+    {
+      "id": "REF3",
+      "name": "Stockholm 673K (PENSION_MAX), ej kyrka",
+      "input": {
+        "bruttolön": 673000,
+        "revenue": 2000000,
+        "costs": 800000,
+        "church_member": false,
+        "kommun": "Stockholm"
+      },
+      "expected": null
+    },
+    {
+      "id": "REF4",
+      "name": "Stockholm 300K, ej kyrka",
+      "input": {
+        "bruttolön": 300000,
+        "revenue": 1000000,
+        "costs": 400000,
+        "church_member": false,
+        "kommun": "Stockholm"
+      },
+      "expected": null
+    },
+    {
+      "id": "REF5",
+      "name": "Dorotea 660K, ej kyrka",
+      "input": {
+        "bruttolön": 660000,
+        "revenue": 2000000,
+        "costs": 800000,
+        "church_member": false,
+        "kommun": "Dorotea"
+      },
+      "expected": null
+    }
+  ]
+}

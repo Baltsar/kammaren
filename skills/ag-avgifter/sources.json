@@ -1,0 +1,26 @@
+[
+  {
+    "name": "Socialavgiftslagen (2000:980)",
+    "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/svensk-forfattningssamling/socialavgiftslag-2000980_sfs-2000-980/",
+    "date": "2026-01-01",
+    "note": "2 kap 26-31 §§ — delposter, åldersreduktion, Växa-stödet"
+  },
+  {
+    "name": "Skatteverket: Belopp och procentsatser 2026",
+    "url": "https://www.skatteverket.se/download/18.1522bf3f19aea8075ba3285/1767885159120/belopp-och-procentsatser-for-inkomstaret-2026.pdf",
+    "date": "2026-01-07",
+    "note": "Officiell PDF. Total 31.42%. Åldersgräns 67 år."
+  },
+  {
+    "name": "Skatteverket: Arbetsgivaravgifter",
+    "url": "https://skatteverket.se/foretag/arbetsgivare/arbetsgivaravgifterochskatteavdrag/arbetsgivaravgifter.4.233f91f71260075abe8800020817.html",
+    "date": "2026-01-01",
+    "note": "Webbsida med sammanfattning och Växa-stödet"
+  },
+  {
+    "name": "Prop. 2025/26:66 — Tillfälligt nedsatta arbetsgivaravgifter för unga",
+    "url": "https://www.riksdagen.se/sv/dokument-och-lagar/dokument/proposition/tillfalligt-nedsatta-arbetsgivaravgifter-for_hd0366/html/",
+    "date": "2026-02-26",
+    "note": "Ungdomsrabatt 20.81% för 19-23 år, 1 apr 2026 – 30 sep 2027. EJ implementerad i v1."
+  }
+]

@@ -1,0 +1,10 @@
+node_modules/
+.env
+.env.*
+*.log
+.DS_Store
+dist/
+.turbo/
+vault/audit.log
+vault/imports/
+vault/execution-results/

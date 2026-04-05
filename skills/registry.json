@@ -1,0 +1,60 @@
+{
+  "version": "1.0",
+  "skills": [
+    {
+      "id": "tax-optimizer",
+      "name": "Skatteoptimering 3:12",
+      "category": "skatt",
+      "tier": "free",
+      "status": "implemented",
+      "version": "2026-03-14-v1",
+      "path": "./tax-optimizer/optimize.ts",
+      "sprint": 1
+    },
+    {
+      "id": "arbetsgivaravgifter",
+      "name": "Arbetsgivaravgifter",
+      "category": "lon",
+      "tier": "free",
+      "status": "planned",
+      "path": "./arbetsgivaravgifter/calculate.ts",
+      "sprint": 1
+    },
+    {
+      "id": "momsberaknare",
+      "name": "Momsberäknare",
+      "category": "moms",
+      "tier": "free",
+      "status": "planned",
+      "path": "./momsberaknare/calculate.ts",
+      "sprint": 1
+    },
+    {
+      "id": "periodiseringsfond",
+      "name": "Periodiseringsfond",
+      "category": "skatt",
+      "tier": "free",
+      "status": "planned",
+      "path": "./periodiseringsfond/calculate.ts",
+      "sprint": 1
+    },
+    {
+      "id": "bolagsskatt",
+      "name": "Bolagsskatt",
+      "category": "skatt",
+      "tier": "free",
+      "status": "planned",
+      "path": "./bolagsskatt/calculate.ts",
+      "sprint": 1
+    },
+    {
+      "id": "k10-underlag",
+      "name": "K10-underlag (3:12)",
+      "category": "skatt",
+      "tier": "free",
+      "status": "planned",
+      "path": "./k10-underlag/calculate.ts",
+      "sprint": 1
+    }
+  ]
+}
