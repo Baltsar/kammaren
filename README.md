@@ -14,7 +14,7 @@ Any bookkeeping system (Fortnox, Bokio, gnubok, SIE4, Excel)
         ┌─────▼──────┐
         │  KAMMAREN   │
         │             │
-        │  skills/    │  6 live, 29 planned
+        │  skills/    │  1 live · 4 built · 29 planned
         │  verify/    │  258 assertions against official tables
         │  constants/ │  year-guarded, refuses outdated data
         │  vault/     │  SHA-256 hash chain, write-once
@@ -42,6 +42,19 @@ A kernel. Like Linux is to Android, KAMMAREN is to whatever tax tool, AI agent, 
 - Not a chatbot (chatbots guess, code calculates)
 - Not a SaaS with a monthly fee
 - Not a calculator (that's one feature, not the product)
+
+---
+
+## Quick Start
+
+```bash
+git clone https://github.com/Baltsar/kammaren
+cd kammaren
+bun install
+bun test verify/
+```
+
+258 tests. All should pass. If they don't, [open an issue](https://github.com/Baltsar/kammaren/issues).
 
 ---
 
@@ -288,7 +301,7 @@ Bun · TypeScript (strict) · SHA-256 hash chain · MCP · Vercel · AGPL-3.0
 - [Calculator](https://kammaren.nu) — free tax optimization for Swedish AB
 - [MCP Server](https://mcp.kammaren.nu) — plug into any agent
 - [npm](https://www.npmjs.com/package/kammaren-tax-engine) — install the engine
-- [Build Log](https://kammaren.nu/bygg) — follow the build in public
+- [Build Log](https://kammaren.nu/build) — follow the build in public
 
 ---
 
