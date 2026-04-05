@@ -2,6 +2,8 @@
 
 [![Verify](https://github.com/Baltsar/kammaren/actions/workflows/verify.yml/badge.svg)](https://github.com/Baltsar/kammaren/actions/workflows/verify.yml)
 
+![KAMMAREN Architecture](assets/kammaren_architecture_diagram.svg)
+
 **The correctness layer for Swedish company administration.**
 
 Every AI agent can talk about your taxes. None of them can prove they got it right.
