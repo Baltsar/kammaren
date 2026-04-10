@@ -9,7 +9,7 @@
  */
 
 import type { SkillInput, SkillOutput } from '../types.js';
-import { TAX_CONSTANTS_2026, type TaxConstants } from './constants.js';
+import { TAX_CONSTANTS_2026, type TaxConstants } from '../../constants/loader.js';
 import { resolveRates, type ResolvedRates } from './kommun-skattesatser.js';
 
 // ── Internal interfaces ─────────────────────────────────────────────────

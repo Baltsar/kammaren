@@ -18,7 +18,7 @@ import { AG_AVGIFTER_CASES } from './golden-cases/ag-avgifter.cases.js';
 import { MOMS_CASES } from './golden-cases/moms.cases.js';
 import { BOLAGSSKATT_CASES } from './golden-cases/bolagsskatt.cases.js';
 import { K10_CASES } from './golden-cases/k10.cases.js';
-import { TAX_CONSTANTS_2026 } from '../skills/tax-optimizer/constants.js';
+import { TAX_CONSTANTS_2026 } from '../constants/loader.js';
 import { calculate as agAvgifterCalc } from '../skills/ag-avgifter/calculate.js';
 import { calculate as momsCalc } from '../skills/moms/calculate.js';
 import { calculate as bolagsskattCalc } from '../skills/bolagsskatt/calculate.js';

@@ -42,7 +42,7 @@
  */
 
 import type { SkillInput, SkillOutput, Skill } from '../types.js';
-import { BOLAGSSKATT_CONSTANTS_2026 } from './constants.js';
+import { BOLAGSSKATT_CONSTANTS_2026 } from '../../constants/loader.js';
 import { assertInkomstar } from '../../verify/year-guard.js';
 
 // ── Interna typer ─────────────────────────────────────────────────────────────

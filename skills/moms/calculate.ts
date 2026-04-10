@@ -13,7 +13,7 @@
  */
 
 import type { SkillInput, SkillOutput, Skill } from '../types.js';
-import { MOMS_CONSTANTS_2026, BAS_UTGAENDE, BAS_REVERSE_CHARGE } from './constants.js';
+import { MOMS_CONSTANTS_2026, BAS_UTGAENDE, BAS_REVERSE_CHARGE } from '../../constants/loader.js';
 import { assertInkomstar } from '../../verify/year-guard.js';
 
 // ── Interna typer ─────────────────────────────────────────────────────────────

@@ -1,0 +1,1748 @@
+{
+  "inkomstar": 2026,
+  "antal_kommuner": 290,
+  "source": "Skatteverket \"Skattesatser kommuner 2026\" (xlsx). Verifierad 2026-03-28.",
+  "note": "KI = kommunalskatt + landstingsskatt kombinerat (exkl. kyrkoavgift och begravningsavgift). Gotland har ingen region — 33.600% är enbart kommunalskatt.",
+  "kommuner": {
+    "ale": {
+      "kommun": "Ale",
+      "kommunalskatt": 0.328,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "alingsås": {
+      "kommun": "Alingsås",
+      "kommunalskatt": 0.3284,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "alvesta": {
+      "kommun": "Alvesta",
+      "kommunalskatt": 0.3342,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "aneby": {
+      "kommun": "Aneby",
+      "kommunalskatt": 0.3385,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "arboga": {
+      "kommun": "Arboga",
+      "kommunalskatt": 0.3329,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "arjeplog": {
+      "kommun": "Arjeplog",
+      "kommunalskatt": 0.3484,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "arvidsjaur": {
+      "kommun": "Arvidsjaur",
+      "kommunalskatt": 0.3414,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "arvika": {
+      "kommun": "Arvika",
+      "kommunalskatt": 0.3403,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "askersund": {
+      "kommun": "Askersund",
+      "kommunalskatt": 0.3415,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "avesta": {
+      "kommun": "Avesta",
+      "kommunalskatt": 0.3395,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "bengtsfors": {
+      "kommun": "Bengtsfors",
+      "kommunalskatt": 0.344,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "berg": {
+      "kommun": "Berg",
+      "kommunalskatt": 0.3422,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "bjurholm": {
+      "kommun": "Bjurholm",
+      "kommunalskatt": 0.35,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "bjuv": {
+      "kommun": "Bjuv",
+      "kommunalskatt": 0.3217,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "boden": {
+      "kommun": "Boden",
+      "kommunalskatt": 0.3394,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "bollebygd": {
+      "kommun": "Bollebygd",
+      "kommunalskatt": 0.3307,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "bollnäs": {
+      "kommun": "Bollnäs",
+      "kommunalskatt": 0.3337,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "borgholm": {
+      "kommun": "Borgholm",
+      "kommunalskatt": 0.3344,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "borlänge": {
+      "kommun": "Borlänge",
+      "kommunalskatt": 0.344,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "borås": {
+      "kommun": "Borås",
+      "kommunalskatt": 0.3279,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "botkyrka": {
+      "kommun": "Botkyrka",
+      "kommunalskatt": 0.3223,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "boxholm": {
+      "kommun": "Boxholm",
+      "kommunalskatt": 0.3337,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "bromölla": {
+      "kommun": "Bromölla",
+      "kommunalskatt": 0.3374,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "bräcke": {
+      "kommun": "Bräcke",
+      "kommunalskatt": 0.3509,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "burlöv": {
+      "kommun": "Burlöv",
+      "kommunalskatt": 0.3127,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "båstad": {
+      "kommun": "Båstad",
+      "kommunalskatt": 0.3141,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "dals-ed": {
+      "kommun": "Dals-Ed",
+      "kommunalskatt": 0.3469,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "danderyd": {
+      "kommun": "Danderyd",
+      "kommunalskatt": 0.3058,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "degerfors": {
+      "kommun": "Degerfors",
+      "kommunalskatt": 0.353,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "dorotea": {
+      "kommun": "Dorotea",
+      "kommunalskatt": 0.3565,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "eda": {
+      "kommun": "Eda",
+      "kommunalskatt": 0.3455,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ekerö": {
+      "kommun": "Ekerö",
+      "kommunalskatt": 0.3145,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "eksjö": {
+      "kommun": "Eksjö",
+      "kommunalskatt": 0.3402,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "emmaboda": {
+      "kommun": "Emmaboda",
+      "kommunalskatt": 0.3382,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "enköping": {
+      "kommun": "Enköping",
+      "kommunalskatt": 0.3305,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "eskilstuna": {
+      "kommun": "Eskilstuna",
+      "kommunalskatt": 0.3285,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "eslöv": {
+      "kommun": "Eslöv",
+      "kommunalskatt": 0.3172,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "essunga": {
+      "kommun": "Essunga",
+      "kommunalskatt": 0.3305,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "fagersta": {
+      "kommun": "Fagersta",
+      "kommunalskatt": 0.3299,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "falkenberg": {
+      "kommun": "Falkenberg",
+      "kommunalskatt": 0.325,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "falköping": {
+      "kommun": "Falköping",
+      "kommunalskatt": 0.3343,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "falun": {
+      "kommun": "Falun",
+      "kommunalskatt": 0.3405,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "filipstad": {
+      "kommun": "Filipstad",
+      "kommunalskatt": 0.3455,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "finspång": {
+      "kommun": "Finspång",
+      "kommunalskatt": 0.337,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "flen": {
+      "kommun": "Flen",
+      "kommunalskatt": 0.331,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "forshaga": {
+      "kommun": "Forshaga",
+      "kommunalskatt": 0.3463,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "färgelanda": {
+      "kommun": "Färgelanda",
+      "kommunalskatt": 0.3439,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "gagnef": {
+      "kommun": "Gagnef",
+      "kommunalskatt": 0.3427,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "gislaved": {
+      "kommun": "Gislaved",
+      "kommunalskatt": 0.3375,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "gnesta": {
+      "kommun": "Gnesta",
+      "kommunalskatt": 0.3295,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "gnosjö": {
+      "kommun": "Gnosjö",
+      "kommunalskatt": 0.34,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "gotland": {
+      "kommun": "Gotland",
+      "kommunalskatt": 0.336,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "grums": {
+      "kommun": "Grums",
+      "kommunalskatt": 0.3478,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "grästorp": {
+      "kommun": "Grästorp",
+      "kommunalskatt": 0.3347,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "gullspång": {
+      "kommun": "Gullspång",
+      "kommunalskatt": 0.3397,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "gällivare": {
+      "kommun": "Gällivare",
+      "kommunalskatt": 0.3389,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "gävle": {
+      "kommun": "Gävle",
+      "kommunalskatt": 0.3377,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "göteborg": {
+      "kommun": "Göteborg",
+      "kommunalskatt": 0.326,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "götene": {
+      "kommun": "Götene",
+      "kommunalskatt": 0.336,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "habo": {
+      "kommun": "Habo",
+      "kommunalskatt": 0.3393,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hagfors": {
+      "kommun": "Hagfors",
+      "kommunalskatt": 0.343,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hallsberg": {
+      "kommun": "Hallsberg",
+      "kommunalskatt": 0.3385,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hallstahammar": {
+      "kommun": "Hallstahammar",
+      "kommunalskatt": 0.3269,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "halmstad": {
+      "kommun": "Halmstad",
+      "kommunalskatt": 0.3238,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hammarö": {
+      "kommun": "Hammarö",
+      "kommunalskatt": 0.3505,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "haninge": {
+      "kommun": "Haninge",
+      "kommunalskatt": 0.3128,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "haparanda": {
+      "kommun": "Haparanda",
+      "kommunalskatt": 0.3384,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "heby": {
+      "kommun": "Heby",
+      "kommunalskatt": 0.3421,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hedemora": {
+      "kommun": "Hedemora",
+      "kommunalskatt": 0.3415,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "helsingborg": {
+      "kommun": "Helsingborg",
+      "kommunalskatt": 0.3139,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "herrljunga": {
+      "kommun": "Herrljunga",
+      "kommunalskatt": 0.3362,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hjo": {
+      "kommun": "Hjo",
+      "kommunalskatt": 0.3348,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hofors": {
+      "kommun": "Hofors",
+      "kommunalskatt": 0.3437,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "huddinge": {
+      "kommun": "Huddinge",
+      "kommunalskatt": 0.3171,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hudiksvall": {
+      "kommun": "Hudiksvall",
+      "kommunalskatt": 0.3312,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hultsfred": {
+      "kommun": "Hultsfred",
+      "kommunalskatt": 0.3377,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hylte": {
+      "kommun": "Hylte",
+      "kommunalskatt": 0.3385,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hällefors": {
+      "kommun": "Hällefors",
+      "kommunalskatt": 0.3435,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "härjedalen": {
+      "kommun": "Härjedalen",
+      "kommunalskatt": 0.3417,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "härnösand": {
+      "kommun": "Härnösand",
+      "kommunalskatt": 0.3463,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "härryda": {
+      "kommun": "Härryda",
+      "kommunalskatt": 0.3198,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hässleholm": {
+      "kommun": "Hässleholm",
+      "kommunalskatt": 0.3238,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "håbo": {
+      "kommun": "Håbo",
+      "kommunalskatt": 0.333,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "höganäs": {
+      "kommun": "Höganäs",
+      "kommunalskatt": 0.3091,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "högsby": {
+      "kommun": "Högsby",
+      "kommunalskatt": 0.3407,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "hörby": {
+      "kommun": "Hörby",
+      "kommunalskatt": 0.3226,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "höör": {
+      "kommun": "Höör",
+      "kommunalskatt": 0.3263,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "jokkmokk": {
+      "kommun": "Jokkmokk",
+      "kommunalskatt": 0.3429,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "järfälla": {
+      "kommun": "Järfälla",
+      "kommunalskatt": 0.3152,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "jönköping": {
+      "kommun": "Jönköping",
+      "kommunalskatt": 0.334,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kalix": {
+      "kommun": "Kalix",
+      "kommunalskatt": 0.3389,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kalmar": {
+      "kommun": "Kalmar",
+      "kommunalskatt": 0.3367,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "karlsborg": {
+      "kommun": "Karlsborg",
+      "kommunalskatt": 0.328,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "karlshamn": {
+      "kommun": "Karlshamn",
+      "kommunalskatt": 0.338,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "karlskoga": {
+      "kommun": "Karlskoga",
+      "kommunalskatt": 0.343,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "karlskrona": {
+      "kommun": "Karlskrona",
+      "kommunalskatt": 0.3369,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "karlstad": {
+      "kommun": "Karlstad",
+      "kommunalskatt": 0.3355,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "katrineholm": {
+      "kommun": "Katrineholm",
+      "kommunalskatt": 0.3295,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kil": {
+      "kommun": "Kil",
+      "kommunalskatt": 0.3463,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kinda": {
+      "kommun": "Kinda",
+      "kommunalskatt": 0.33,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kiruna": {
+      "kommun": "Kiruna",
+      "kommunalskatt": 0.3439,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "klippan": {
+      "kommun": "Klippan",
+      "kommunalskatt": 0.3193,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "knivsta": {
+      "kommun": "Knivsta",
+      "kommunalskatt": 0.3262,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kramfors": {
+      "kommun": "Kramfors",
+      "kommunalskatt": 0.3443,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kristianstad": {
+      "kommun": "Kristianstad",
+      "kommunalskatt": 0.3264,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kristinehamn": {
+      "kommun": "Kristinehamn",
+      "kommunalskatt": 0.3425,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "krokom": {
+      "kommun": "Krokom",
+      "kommunalskatt": 0.3387,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kumla": {
+      "kommun": "Kumla",
+      "kommunalskatt": 0.3384,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kungsbacka": {
+      "kommun": "Kungsbacka",
+      "kommunalskatt": 0.3258,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kungsör": {
+      "kommun": "Kungsör",
+      "kommunalskatt": 0.3291,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kungälv": {
+      "kommun": "Kungälv",
+      "kommunalskatt": 0.3292,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "kävlinge": {
+      "kommun": "Kävlinge",
+      "kommunalskatt": 0.2959,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "köping": {
+      "kommun": "Köping",
+      "kommunalskatt": 0.3304,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "laholm": {
+      "kommun": "Laholm",
+      "kommunalskatt": 0.328,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "landskrona": {
+      "kommun": "Landskrona",
+      "kommunalskatt": 0.3142,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "laxå": {
+      "kommun": "Laxå",
+      "kommunalskatt": 0.35,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lekeberg": {
+      "kommun": "Lekeberg",
+      "kommunalskatt": 0.3373,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "leksand": {
+      "kommun": "Leksand",
+      "kommunalskatt": 0.338,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lerum": {
+      "kommun": "Lerum",
+      "kommunalskatt": 0.3203,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lessebo": {
+      "kommun": "Lessebo",
+      "kommunalskatt": 0.3381,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lidingö": {
+      "kommun": "Lidingö",
+      "kommunalskatt": 0.2967,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lidköping": {
+      "kommun": "Lidköping",
+      "kommunalskatt": 0.3274,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lilla edet": {
+      "kommun": "Lilla Edet",
+      "kommunalskatt": 0.3385,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lindesberg": {
+      "kommun": "Lindesberg",
+      "kommunalskatt": 0.346,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "linköping": {
+      "kommun": "Linköping",
+      "kommunalskatt": 0.3175,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ljungby": {
+      "kommun": "Ljungby",
+      "kommunalskatt": 0.3307,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ljusdal": {
+      "kommun": "Ljusdal",
+      "kommunalskatt": 0.3387,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ljusnarsberg": {
+      "kommun": "Ljusnarsberg",
+      "kommunalskatt": 0.338,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lomma": {
+      "kommun": "Lomma",
+      "kommunalskatt": 0.3072,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ludvika": {
+      "kommun": "Ludvika",
+      "kommunalskatt": 0.3405,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "luleå": {
+      "kommun": "Luleå",
+      "kommunalskatt": 0.3384,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lund": {
+      "kommun": "Lund",
+      "kommunalskatt": 0.3242,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lycksele": {
+      "kommun": "Lycksele",
+      "kommunalskatt": 0.349,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "lysekil": {
+      "kommun": "Lysekil",
+      "kommunalskatt": 0.3394,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "malmö": {
+      "kommun": "Malmö",
+      "kommunalskatt": 0.3242,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "malung-sälen": {
+      "kommun": "Malung-Sälen",
+      "kommunalskatt": 0.3445,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "malå": {
+      "kommun": "Malå",
+      "kommunalskatt": 0.352,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mariestad": {
+      "kommun": "Mariestad",
+      "kommunalskatt": 0.3274,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mark": {
+      "kommun": "Mark",
+      "kommunalskatt": 0.3299,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "markaryd": {
+      "kommun": "Markaryd",
+      "kommunalskatt": 0.3331,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mellerud": {
+      "kommun": "Mellerud",
+      "kommunalskatt": 0.3408,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mjölby": {
+      "kommun": "Mjölby",
+      "kommunalskatt": 0.3345,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mora": {
+      "kommun": "Mora",
+      "kommunalskatt": 0.3432,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "motala": {
+      "kommun": "Motala",
+      "kommunalskatt": 0.3325,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mullsjö": {
+      "kommun": "Mullsjö",
+      "kommunalskatt": 0.341,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "munkedal": {
+      "kommun": "Munkedal",
+      "kommunalskatt": 0.3486,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "munkfors": {
+      "kommun": "Munkfors",
+      "kommunalskatt": 0.343,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mölndal": {
+      "kommun": "Mölndal",
+      "kommunalskatt": 0.3199,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mönsterås": {
+      "kommun": "Mönsterås",
+      "kommunalskatt": 0.3407,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "mörbylånga": {
+      "kommun": "Mörbylånga",
+      "kommunalskatt": 0.3407,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nacka": {
+      "kommun": "Nacka",
+      "kommunalskatt": 0.3011,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nora": {
+      "kommun": "Nora",
+      "kommunalskatt": 0.3455,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "norberg": {
+      "kommun": "Norberg",
+      "kommunalskatt": 0.3354,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nordanstig": {
+      "kommun": "Nordanstig",
+      "kommunalskatt": 0.3402,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nordmaling": {
+      "kommun": "Nordmaling",
+      "kommunalskatt": 0.351,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "norrköping": {
+      "kommun": "Norrköping",
+      "kommunalskatt": 0.333,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "norrtälje": {
+      "kommun": "Norrtälje",
+      "kommunalskatt": 0.3205,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "norsjö": {
+      "kommun": "Norsjö",
+      "kommunalskatt": 0.352,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nybro": {
+      "kommun": "Nybro",
+      "kommunalskatt": 0.3419,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nykvarn": {
+      "kommun": "Nykvarn",
+      "kommunalskatt": 0.323,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nyköping": {
+      "kommun": "Nyköping",
+      "kommunalskatt": 0.3225,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nynäshamn": {
+      "kommun": "Nynäshamn",
+      "kommunalskatt": 0.3218,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "nässjö": {
+      "kommun": "Nässjö",
+      "kommunalskatt": 0.343,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ockelbo": {
+      "kommun": "Ockelbo",
+      "kommunalskatt": 0.3427,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "olofström": {
+      "kommun": "Olofström",
+      "kommunalskatt": 0.3375,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "orsa": {
+      "kommun": "Orsa",
+      "kommunalskatt": 0.343,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "orust": {
+      "kommun": "Orust",
+      "kommunalskatt": 0.3369,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "osby": {
+      "kommun": "Osby",
+      "kommunalskatt": 0.3399,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "oskarshamn": {
+      "kommun": "Oskarshamn",
+      "kommunalskatt": 0.3421,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ovanåker": {
+      "kommun": "Ovanåker",
+      "kommunalskatt": 0.3337,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "oxelösund": {
+      "kommun": "Oxelösund",
+      "kommunalskatt": 0.3305,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "pajala": {
+      "kommun": "Pajala",
+      "kommunalskatt": 0.3474,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "partille": {
+      "kommun": "Partille",
+      "kommunalskatt": 0.3136,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "perstorp": {
+      "kommun": "Perstorp",
+      "kommunalskatt": 0.3199,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "piteå": {
+      "kommun": "Piteå",
+      "kommunalskatt": 0.3359,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ragunda": {
+      "kommun": "Ragunda",
+      "kommunalskatt": 0.3492,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "robertsfors": {
+      "kommun": "Robertsfors",
+      "kommunalskatt": 0.35,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ronneby": {
+      "kommun": "Ronneby",
+      "kommunalskatt": 0.3368,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "rättvik": {
+      "kommun": "Rättvik",
+      "kommunalskatt": 0.338,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sala": {
+      "kommun": "Sala",
+      "kommunalskatt": 0.3319,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "salem": {
+      "kommun": "Salem",
+      "kommunalskatt": 0.32,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sandviken": {
+      "kommun": "Sandviken",
+      "kommunalskatt": 0.3312,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sigtuna": {
+      "kommun": "Sigtuna",
+      "kommunalskatt": 0.3183,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "simrishamn": {
+      "kommun": "Simrishamn",
+      "kommunalskatt": 0.3169,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sjöbo": {
+      "kommun": "Sjöbo",
+      "kommunalskatt": 0.321,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "skara": {
+      "kommun": "Skara",
+      "kommunalskatt": 0.3338,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "skellefteå": {
+      "kommun": "Skellefteå",
+      "kommunalskatt": 0.3445,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "skinnskatteberg": {
+      "kommun": "Skinnskatteberg",
+      "kommunalskatt": 0.3334,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "skurup": {
+      "kommun": "Skurup",
+      "kommunalskatt": 0.316,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "skövde": {
+      "kommun": "Skövde",
+      "kommunalskatt": 0.3309,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "smedjebacken": {
+      "kommun": "Smedjebacken",
+      "kommunalskatt": 0.3444,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sollefteå": {
+      "kommun": "Sollefteå",
+      "kommunalskatt": 0.3468,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sollentuna": {
+      "kommun": "Sollentuna",
+      "kommunalskatt": 0.3045,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "solna": {
+      "kommun": "Solna",
+      "kommunalskatt": 0.297,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sorsele": {
+      "kommun": "Sorsele",
+      "kommunalskatt": 0.3545,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sotenäs": {
+      "kommun": "Sotenäs",
+      "kommunalskatt": 0.3347,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "staffanstorp": {
+      "kommun": "Staffanstorp",
+      "kommunalskatt": 0.3012,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "stenungsund": {
+      "kommun": "Stenungsund",
+      "kommunalskatt": 0.3312,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "stockholm": {
+      "kommun": "Stockholm",
+      "kommunalskatt": 0.3055,
+      "begravningsavgift": 0.0007,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "storfors": {
+      "kommun": "Storfors",
+      "kommunalskatt": 0.3498,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "storuman": {
+      "kommun": "Storuman",
+      "kommunalskatt": 0.3495,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "strängnäs": {
+      "kommun": "Strängnäs",
+      "kommunalskatt": 0.325,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "strömstad": {
+      "kommun": "Strömstad",
+      "kommunalskatt": 0.3339,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "strömsund": {
+      "kommun": "Strömsund",
+      "kommunalskatt": 0.3492,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sundbyberg": {
+      "kommun": "Sundbyberg",
+      "kommunalskatt": 0.3158,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sundsvall": {
+      "kommun": "Sundsvall",
+      "kommunalskatt": 0.3388,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sunne": {
+      "kommun": "Sunne",
+      "kommunalskatt": 0.3375,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "surahammar": {
+      "kommun": "Surahammar",
+      "kommunalskatt": 0.3319,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "svalöv": {
+      "kommun": "Svalöv",
+      "kommunalskatt": 0.3192,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "svedala": {
+      "kommun": "Svedala",
+      "kommunalskatt": 0.3142,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "svenljunga": {
+      "kommun": "Svenljunga",
+      "kommunalskatt": 0.3353,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "säffle": {
+      "kommun": "Säffle",
+      "kommunalskatt": 0.338,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "säter": {
+      "kommun": "Säter",
+      "kommunalskatt": 0.343,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sävsjö": {
+      "kommun": "Sävsjö",
+      "kommunalskatt": 0.3368,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "söderhamn": {
+      "kommun": "Söderhamn",
+      "kommunalskatt": 0.3317,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "söderköping": {
+      "kommun": "Söderköping",
+      "kommunalskatt": 0.3353,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "södertälje": {
+      "kommun": "Södertälje",
+      "kommunalskatt": 0.3238,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "sölvesborg": {
+      "kommun": "Sölvesborg",
+      "kommunalskatt": 0.3386,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tanum": {
+      "kommun": "Tanum",
+      "kommunalskatt": 0.3304,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tibro": {
+      "kommun": "Tibro",
+      "kommunalskatt": 0.3319,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tidaholm": {
+      "kommun": "Tidaholm",
+      "kommunalskatt": 0.3355,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tierp": {
+      "kommun": "Tierp",
+      "kommunalskatt": 0.33,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "timrå": {
+      "kommun": "Timrå",
+      "kommunalskatt": 0.3438,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tingsryd": {
+      "kommun": "Tingsryd",
+      "kommunalskatt": 0.34,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tjörn": {
+      "kommun": "Tjörn",
+      "kommunalskatt": 0.3319,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tomelilla": {
+      "kommun": "Tomelilla",
+      "kommunalskatt": 0.3179,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "torsby": {
+      "kommun": "Torsby",
+      "kommunalskatt": 0.343,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "torsås": {
+      "kommun": "Torsås",
+      "kommunalskatt": 0.3379,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tranemo": {
+      "kommun": "Tranemo",
+      "kommunalskatt": 0.3298,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tranås": {
+      "kommun": "Tranås",
+      "kommunalskatt": 0.3377,
+      "begravningsavgift": 0.00285,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "trelleborg": {
+      "kommun": "Trelleborg",
+      "kommunalskatt": 0.3158,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "trollhättan": {
+      "kommun": "Trollhättan",
+      "kommunalskatt": 0.3384,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "trosa": {
+      "kommun": "Trosa",
+      "kommunalskatt": 0.3203,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "tyresö": {
+      "kommun": "Tyresö",
+      "kommunalskatt": 0.3183,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "täby": {
+      "kommun": "Täby",
+      "kommunalskatt": 0.2988,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "töreboda": {
+      "kommun": "Töreboda",
+      "kommunalskatt": 0.332,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "uddevalla": {
+      "kommun": "Uddevalla",
+      "kommunalskatt": 0.3364,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ulricehamn": {
+      "kommun": "Ulricehamn",
+      "kommunalskatt": 0.3253,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "umeå": {
+      "kommun": "Umeå",
+      "kommunalskatt": 0.3465,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "upplands väsby": {
+      "kommun": "Upplands Väsby",
+      "kommunalskatt": 0.3175,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "upplands-bro": {
+      "kommun": "Upplands-Bro",
+      "kommunalskatt": 0.3173,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "uppsala": {
+      "kommun": "Uppsala",
+      "kommunalskatt": 0.3285,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "uppvidinge": {
+      "kommun": "Uppvidinge",
+      "kommunalskatt": 0.338,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vadstena": {
+      "kommun": "Vadstena",
+      "kommunalskatt": 0.3435,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vaggeryd": {
+      "kommun": "Vaggeryd",
+      "kommunalskatt": 0.3325,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "valdemarsvik": {
+      "kommun": "Valdemarsvik",
+      "kommunalskatt": 0.3403,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vallentuna": {
+      "kommun": "Vallentuna",
+      "kommunalskatt": 0.3123,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vansbro": {
+      "kommun": "Vansbro",
+      "kommunalskatt": 0.3428,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vara": {
+      "kommun": "Vara",
+      "kommunalskatt": 0.3325,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "varberg": {
+      "kommun": "Varberg",
+      "kommunalskatt": 0.3173,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vaxholm": {
+      "kommun": "Vaxholm",
+      "kommunalskatt": 0.3163,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vellinge": {
+      "kommun": "Vellinge",
+      "kommunalskatt": 0.2968,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vetlanda": {
+      "kommun": "Vetlanda",
+      "kommunalskatt": 0.3377,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vilhelmina": {
+      "kommun": "Vilhelmina",
+      "kommunalskatt": 0.355,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vimmerby": {
+      "kommun": "Vimmerby",
+      "kommunalskatt": 0.3422,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vindeln": {
+      "kommun": "Vindeln",
+      "kommunalskatt": 0.352,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vingåker": {
+      "kommun": "Vingåker",
+      "kommunalskatt": 0.335,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vänersborg": {
+      "kommun": "Vänersborg",
+      "kommunalskatt": 0.3369,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vännäs": {
+      "kommun": "Vännäs",
+      "kommunalskatt": 0.352,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "värmdö": {
+      "kommun": "Värmdö",
+      "kommunalskatt": 0.3131,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "värnamo": {
+      "kommun": "Värnamo",
+      "kommunalskatt": 0.3328,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "västervik": {
+      "kommun": "Västervik",
+      "kommunalskatt": 0.3302,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "västerås": {
+      "kommun": "Västerås",
+      "kommunalskatt": 0.3124,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "växjö": {
+      "kommun": "Växjö",
+      "kommunalskatt": 0.3219,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "vårgårda": {
+      "kommun": "Vårgårda",
+      "kommunalskatt": 0.3309,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ydre": {
+      "kommun": "Ydre",
+      "kommunalskatt": 0.341,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ystad": {
+      "kommun": "Ystad",
+      "kommunalskatt": 0.3129,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "älmhult": {
+      "kommun": "Älmhult",
+      "kommunalskatt": 0.3386,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "älvdalen": {
+      "kommun": "Älvdalen",
+      "kommunalskatt": 0.3477,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "älvkarleby": {
+      "kommun": "Älvkarleby",
+      "kommunalskatt": 0.344,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "älvsbyn": {
+      "kommun": "Älvsbyn",
+      "kommunalskatt": 0.3379,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ängelholm": {
+      "kommun": "Ängelholm",
+      "kommunalskatt": 0.3135,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "åmål": {
+      "kommun": "Åmål",
+      "kommunalskatt": 0.3394,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ånge": {
+      "kommun": "Ånge",
+      "kommunalskatt": 0.3462,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "åre": {
+      "kommun": "Åre",
+      "kommunalskatt": 0.3392,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "årjäng": {
+      "kommun": "Årjäng",
+      "kommunalskatt": 0.3425,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "åsele": {
+      "kommun": "Åsele",
+      "kommunalskatt": 0.3545,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "åstorp": {
+      "kommun": "Åstorp",
+      "kommunalskatt": 0.3147,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "åtvidaberg": {
+      "kommun": "Åtvidaberg",
+      "kommunalskatt": 0.3394,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "öckerö": {
+      "kommun": "Öckerö",
+      "kommunalskatt": 0.3304,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "ödeshög": {
+      "kommun": "Ödeshög",
+      "kommunalskatt": 0.3395,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "örebro": {
+      "kommun": "Örebro",
+      "kommunalskatt": 0.3365,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "örkelljunga": {
+      "kommun": "Örkelljunga",
+      "kommunalskatt": 0.3024,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "örnsköldsvik": {
+      "kommun": "Örnsköldsvik",
+      "kommunalskatt": 0.3385,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "östersund": {
+      "kommun": "Östersund",
+      "kommunalskatt": 0.3372,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "österåker": {
+      "kommun": "Österåker",
+      "kommunalskatt": 0.2893,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "östhammar": {
+      "kommun": "Östhammar",
+      "kommunalskatt": 0.333,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "östra göinge": {
+      "kommun": "Östra Göinge",
+      "kommunalskatt": 0.3217,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "överkalix": {
+      "kommun": "Överkalix",
+      "kommunalskatt": 0.3414,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    },
+    "övertorneå": {
+      "kommun": "Övertorneå",
+      "kommunalskatt": 0.3384,
+      "begravningsavgift": 0.00292,
+      "kyrkoavgift_snitt": 0.01
+    }
+  }
+}

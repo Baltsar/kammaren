@@ -1,0 +1,481 @@
+{
+  "schema_version": "1.0.0",
+  "inkomstar": 2026,
+  "giltig_from": "2026-01-01",
+  "giltig_tom": "2026-12-31",
+  "verifierad_mot": "Skatteverket PDF 2026-01-07",
+  "verifierad_datum": "2026-04-10",
+
+  "basbelopp": {
+    "prisbasbelopp": {
+      "value": 59200,
+      "unit": "SEK",
+      "source": "SCB, SFS 2025"
+    },
+    "forhoijt_prisbasbelopp": {
+      "value": 60500,
+      "unit": "SEK",
+      "source": "SCB",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    },
+    "inkomstbasbelopp": {
+      "value": 83400,
+      "unit": "SEK",
+      "source": "Pensionsmyndigheten"
+    },
+    "ibb_for_312": {
+      "value": 80600,
+      "unit": "SEK",
+      "source": "IL 57 kap 4 §",
+      "note": "IBB 2025 — används för 3:12-utrymme 2026. IBB 2026 (83400) används EJ för 3:12."
+    }
+  },
+
+  "arbetsgivaravgifter": {
+    "total": {
+      "value": 0.3142,
+      "source": "SFL 2 kap 26 §"
+    },
+    "delposter": {
+      "sjukforsakring": {
+        "value": 0.0355,
+        "source": "SFL 2 kap 26 § punkt 1"
+      },
+      "foraldraforsakring": {
+        "value": 0.0200,
+        "source": "SFL 2 kap 26 § punkt 2"
+      },
+      "alderspension": {
+        "value": 0.1021,
+        "source": "SFL 2 kap 26 § punkt 3"
+      },
+      "efterlevandepension": {
+        "value": 0.0030,
+        "source": "SFL 2 kap 26 § punkt 4"
+      },
+      "arbetsmarknad": {
+        "value": 0.0264,
+        "source": "SFL 2 kap 26 § punkt 5"
+      },
+      "arbetsskada": {
+        "value": 0.0010,
+        "source": "SFL 2 kap 26 § punkt 6"
+      },
+      "allman_loneavgift": {
+        "value": 0.1262,
+        "source": "Lag (1994:1920) om allmän löneavgift"
+      },
+      "egentliga_ag": {
+        "value": 0.1880,
+        "source": "Aggregat: total - allman_loneavgift (0.3142 - 0.1262)",
+        "note": "Egentliga socialavgifter exklusive allmän löneavgift"
+      }
+    },
+    "aldersreduktion": {
+      "rate": 0.1021,
+      "max_birth_year": 1958,
+      "source": "SFL 2 kap 27 §",
+      "note": "Fyllt 67 vid årets ingång 2026. Åldersgräns höjd från 66 till 67 fr.o.m. 2026. Bara ålderspensionsavgift."
+    },
+    "ingen_avgift": {
+      "max_birth_year": 1937,
+      "source": "SFL 2 kap 27 §",
+      "note": "Inga avgifter alls för born 1937 eller tidigare"
+    },
+    "vaxa_stodet": {
+      "rate": 0.1021,
+      "max_monthly": 35000,
+      "max_yearly": 420000,
+      "max_employees": 2,
+      "source": "SFL 2 kap 31 §",
+      "note": "Gäller de två första anställda. Ändrat 2026 från ett till två. Max 35000 kr/mån = 420000 kr/år per person."
+    },
+    "min_underlag": {
+      "value": 1000,
+      "unit": "SEK/år",
+      "source": "SKV",
+      "note": "Ingen arbetsgivaravgift om total ersättning < 1000 kr/år"
+    },
+    "ungdomsrabatt": {
+      "rate": 0.2081,
+      "max_monthly": 25000,
+      "min_birth_year": 2003,
+      "max_birth_year": 2007,
+      "giltig_from": "2026-04-01",
+      "giltig_tom": "2027-09-30",
+      "source": "Prop. 2025/26:66, Lag (2026:100)",
+      "verified": false,
+      "note": "Tillfällig. Ej implementerad i skills. Kräver datumlogik."
+    }
+  },
+
+  "moms": {
+    "satser": {
+      "standard": {
+        "value": 0.25,
+        "source": "ML 7:1 första stycket"
+      },
+      "reducerad_1": {
+        "value": 0.12,
+        "source": "ML 7:1 andra stycket"
+      },
+      "reducerad_2": {
+        "value": 0.06,
+        "source": "ML 7:1 tredje stycket"
+      },
+      "noll": {
+        "value": 0.00,
+        "source": "ML 3 kap"
+      }
+    },
+    "omsattningsgrans_momsfri": {
+      "value": 120000,
+      "unit": "SEK/år",
+      "source": "ML 9d kap"
+    },
+    "bas_utgaende": {
+      "0": 0,
+      "6": 2630,
+      "12": 2620,
+      "25": 2610
+    },
+    "bas_reverse_charge": {
+      "6": 2634,
+      "12": 2624,
+      "25": 2614
+    }
+  },
+
+  "bolagsskatt": {
+    "skattesats": {
+      "value": 0.206,
+      "source": "IL 65 kap 10 §"
+    },
+    "periodiseringsfond": {
+      "max_avsattning": {
+        "value": 0.25,
+        "source": "IL 30 kap 5 §"
+      },
+      "max_antal_fonder": {
+        "value": 6,
+        "source": "IL 30 kap 7 §"
+      },
+      "max_ar": {
+        "value": 6,
+        "source": "IL 30 kap 7 §"
+      }
+    },
+    "pfond_diskonteringsranta": {
+      "value": 0.05,
+      "source": "Beräkningskonvention",
+      "verified": false,
+      "note": "Beräkningskonvention för NPV-kalkyl av skatteuppskjutning. Inget lagrum."
+    },
+    "tradabolag_karenstid_ar": {
+      "value": 4,
+      "source": "IL 57 kap",
+      "verified": false,
+      "note": "Karenstid trädabolag. Ej bekräftad mot specifikt paragrafnummer."
+    }
+  },
+
+  "statslanerantan": {
+    "nov_30_2025": {
+      "value": 0.0255,
+      "source": "Riksgälden, SKV PDF 2026-01-07",
+      "note": "Statslåneräntan per 30 november 2025. Används för schablonintäkt och 3:12 kapitalbaserat utrymme."
+    }
+  },
+
+  "inkomstskatt": {
+    "skiktgrans": {
+      "value": 643000,
+      "unit": "SEK",
+      "source": "IL 65 kap 5 §, SKV"
+    },
+    "brytpunkt_under_66": {
+      "value": 660400,
+      "unit": "SEK",
+      "source": "SKV PDF 2026-01-07",
+      "note": "Brytpunkt för statlig skatt, under 66 år"
+    },
+    "brytpunkt_over_66": {
+      "value": 760500,
+      "unit": "SEK",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    },
+    "statlig_skatt": {
+      "value": 0.20,
+      "source": "IL 65 kap 5 §"
+    },
+    "begravningsavgift_snitt": {
+      "value": 0.00292,
+      "source": "SKV",
+      "note": "Riksgenomsnitt. Stockholm = 0.0007."
+    }
+  },
+
+  "grundavdrag": {
+    "floor_factor": {
+      "value": 0.294,
+      "source": "SKV tabeller",
+      "verified": false,
+      "note": "Koefficient för grundavdrag, under 66 år. Ej bekräftad mot specifikt lagrum."
+    },
+    "low_factor": {
+      "value": 0.423,
+      "source": "SKV tabeller",
+      "verified": false,
+      "note": "Koefficient för grundavdrag, under 66 år."
+    },
+    "max_factor": {
+      "value": 0.77,
+      "source": "SKV tabeller",
+      "verified": false,
+      "note": "Koefficient för grundavdrag, under 66 år."
+    }
+  },
+
+  "treslagregeln_312": {
+    "grundbelopp_multipel": {
+      "value": 4,
+      "source": "IL 57 kap 11 §, Prop. 2025/26:1",
+      "note": "Ersätter förenklingsregeln fr.o.m. 2026"
+    },
+    "grundbelopp_belopp": {
+      "value": 322400,
+      "source": "Aggregat: 4 × IBB_3_12 = 4 × 80600",
+      "note": "Precomputed för effektiv åtkomst"
+    },
+    "lonesparr_multipel": {
+      "value": 8,
+      "source": "IL 57 kap 16 §, Prop. 2025/26:1",
+      "note": "Ny lönespärr fr.o.m. 2026"
+    },
+    "lonesparr_belopp": {
+      "value": 644800,
+      "source": "Aggregat: 8 × IBB_3_12 = 8 × 80600",
+      "note": "Precomputed för effektiv åtkomst"
+    },
+    "lonebaserat_andel": {
+      "value": 0.50,
+      "source": "IL 57 kap 16 §"
+    },
+    "lonebaserat_tak_multipel": {
+      "value": 50,
+      "source": "IL 57 kap 16 §",
+      "note": "Max 50 × ägarens kontanta bruttolön"
+    },
+    "lonebaserat_min_agarandel": {
+      "value": 0.04,
+      "source": "IL 57 kap 16 §",
+      "note": "Under 4% ägarandel → inget lönebaserat utrymme"
+    },
+    "kapitalbaserat_rantetillagg": {
+      "value": 0.09,
+      "source": "IL 57 kap 12 §",
+      "note": "9 procentenheter tillägg till statslåneräntan"
+    },
+    "kapitalbaserat_faktor": {
+      "value": 0.1155,
+      "source": "Aggregat: SLR + 9% = 0.0255 + 0.09",
+      "note": "Precomputed: statslanerantan.nov_30_2025.value + kapitalbaserat_rantetillagg.value"
+    },
+    "upprakningsranta_sparat": {
+      "value": 0,
+      "source": "Prop. 2025/26:1",
+      "note": "SLOPAD fr.o.m. 2026. Sparat utrymme förs över nominellt utan uppräkning."
+    },
+    "utdelning_kapitalskatt": {
+      "value": 0.20,
+      "source": "IL 57 kap 20 §"
+    },
+    "omkostnadsbelopp_threshold": {
+      "value": 100000,
+      "unit": "SEK",
+      "source": "IL 57 kap 12 §"
+    }
+  },
+
+  "sarskild_loneskatt": {
+    "passiv_naringsverksamhet": {
+      "value": 0.2426,
+      "source": "SLPL 1 §, SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    },
+    "pension": {
+      "value": 0.2426,
+      "source": "SLPL 1 §",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    }
+  },
+
+  "sgi": {
+    "max": {
+      "value": 592000,
+      "unit": "SEK",
+      "source": "SFB 25 kap",
+      "note": "10 × PBB = 10 × 59200 = 592000"
+    }
+  },
+
+  "pension": {
+    "pgi_max": {
+      "value": 625500,
+      "unit": "SEK",
+      "source": "IL 59 kap",
+      "note": "7.5 × IBB_CURRENT = 7.5 × 83400 = 625500. Pensionsgrundande inkomst max."
+    },
+    "pension_max_gross": {
+      "value": 673038,
+      "unit": "SEK",
+      "source": "Ej verifierat lagrum",
+      "verified": false,
+      "note": "Ej bekräftad mot lagrum. 8.07 × IBB_CURRENT = 8.07 × 83400."
+    }
+  },
+
+  "kyrkoavgift": {
+    "snitt_fallback": {
+      "value": 0.01,
+      "source": "SKV (genomsnitt)",
+      "note": "Fallback om kyrkoavgift saknas för kommunen"
+    }
+  },
+
+  "representation": {
+    "extern_enklare_fortaring": {
+      "value": 60,
+      "unit": "SEK exkl moms",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    },
+    "intern_enklare_fortaring": {
+      "value": 60,
+      "unit": "SEK exkl moms",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    }
+  },
+
+  "traktamente": {
+    "hel_dag": {
+      "value": 300,
+      "unit": "SEK",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    },
+    "halv_dag": {
+      "value": 150,
+      "unit": "SEK",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    },
+    "natt": {
+      "value": 150,
+      "unit": "SEK",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    }
+  },
+
+  "skattefria_gavor": {
+    "julgava": {
+      "value": 600,
+      "unit": "SEK inkl moms",
+      "source": "SKV",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV."
+    },
+    "jubileumsgava": {
+      "value": 1800,
+      "unit": "SEK inkl moms",
+      "source": "SKV",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV."
+    },
+    "minnesgava": {
+      "value": 15000,
+      "unit": "SEK inkl moms",
+      "source": "SKV",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV."
+    }
+  },
+
+  "reseavdrag": {
+    "avdragsgrans": {
+      "value": 15000,
+      "unit": "SEK",
+      "source": "SKV",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV."
+    },
+    "egen_bil_per_mil": {
+      "value": 25,
+      "unit": "SEK/mil",
+      "source": "SKV",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV."
+    },
+    "formansbil_per_mil": {
+      "value": 12,
+      "unit": "SEK/mil",
+      "source": "SKV",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV."
+    },
+    "formansbil_el_per_mil": {
+      "value": 9.50,
+      "unit": "SEK/mil",
+      "source": "SKV",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV."
+    }
+  },
+
+  "kostformaner": {
+    "frukost": {
+      "value": 62,
+      "unit": "SEK/dag",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    },
+    "lunch_middag": {
+      "value": 124,
+      "unit": "SEK/dag",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    },
+    "helt_fri_kost": {
+      "value": 310,
+      "unit": "SEK/dag",
+      "source": "SKV PDF 2026.",
+      "verified": false,
+      "note": "Ej bekräftad mot skill. Källa: SKV PDF 2026."
+    }
+  },
+
+  "_checksums": {
+    "ag_delposter_summa": 0.3142,
+    "ag_delposter_beraknad": "0.0355+0.0200+0.1021+0.0030+0.0264+0.0010+0.1262 = 0.3142",
+    "grundbelopp_beraknad": "4 × 80600 = 322400",
+    "lonesparr_beraknad": "8 × 80600 = 644800",
+    "kapitalbaserat_faktor_beraknad": "0.0255 + 0.09 = 0.1155",
+    "sgi_max_beraknad": "10 × 59200 = 592000",
+    "pgi_max_beraknad": "7.5 × 83400 = 625500",
+    "vaxa_yearly_beraknad": "35000 × 12 = 420000"
+  }
+}
