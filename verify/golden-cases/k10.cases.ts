@@ -490,4 +490,84 @@ export const K10_CASES: GoldenCase[] = [
       },
     ],
   },
+
+  // ── Case 11: egen_lon alias — svenska fältnamnet ─────────────────────
+  // Säkrar att "egen_lon" (svenska) accepteras identiskt med "eigen_lon".
+  // Bakgrund: publik docs angav "egen_lon" medan koden krävde "eigen_lon".
+  {
+    name: 'egen_lon alias: 1M lönesumma, 300k ägarlön via "egen_lon"',
+    description:
+      'Samma input som etablerat case men med svenskt fältnamn egen_lon. ' +
+      'Lönebaserat_underlag = max(0, 1 000 000 − 644 800) = 355 200. ' +
+      'Fore_tak = round(355 200 × 0.50) = 177 600. Tak_50x = 50 × 300 000 = 15 000 000. ' +
+      'Lonebaserat = min(177 600, 15 000 000) = 177 600. ' +
+      'Gränsbelopp = 322 400 + 2 888 + 177 600 + 0 = 502 888.',
+    input: {
+      anskaffningsvarde: 25_000,
+      agarandel_procent: 100,
+      total_lonesumma: 1_000_000,
+      egen_lon: 300_000,
+      sparat_utrymme: 0,
+      inkomstar: 2026,
+    },
+    assertions: [
+      {
+        field: 'result.lonebaserat',
+        expected: 177_600,
+        tolerance: 0,
+        source: 'IL 57 kap 16 §',
+        formula: 'min(round((1 000 000 − 644 800) × 0.5), 50 × 300 000) = 177 600',
+      },
+      {
+        field: 'result.gransbelopp',
+        expected: 502_888,
+        tolerance: 0,
+        source: 'IL 57 kap 11-16 §, Prop. 2025/26:1',
+        formula: '322 400 + 2 888 + 177 600 + 0 = 502 888',
+      },
+    ],
+  },
+
+  // ── Case 12: Zero-salary silent bug — ägarens lön = 0 ────────────────
+  // TIDIGARE BUG: Om eigen_lon = 0 så blev tak_50x = 0 och capen skippades
+  // (villkor: tak_50x > 0). Följd: ägare fick fullt lönebaserat trots att 50x-
+  // taket = 0. Korrekt: vid egen_lon = 0 → lonebaserat = 0 med warning.
+  {
+    name: 'Zero-salary: lönesumma över spärr men ägarens lön = 0',
+    description:
+      'Lönesumma = 1 000 000 (över 644 800 spärr). eigen_lon = 0 → tak_50x = 0. ' +
+      'Efter fix: lonebaserat = 0 (50 × 0 = 0). ' +
+      'Gränsbelopp = 322 400 + 2 888 + 0 + 0 = 325 288.',
+    input: {
+      anskaffningsvarde: 25_000,
+      agarandel_procent: 100,
+      total_lonesumma: 1_000_000,
+      eigen_lon: 0,
+      sparat_utrymme: 0,
+      inkomstar: 2026,
+    },
+    assertions: [
+      {
+        field: 'result.tak_50x',
+        expected: 0,
+        tolerance: 0,
+        source: 'IL 57 kap 16 §',
+        formula: '50 × 0 = 0',
+      },
+      {
+        field: 'result.lonebaserat',
+        expected: 0,
+        tolerance: 0,
+        source: 'IL 57 kap 16 § — 50x-tak',
+        formula: 'min(177 600, 0) = 0',
+      },
+      {
+        field: 'result.gransbelopp',
+        expected: 325_288,
+        tolerance: 0,
+        source: 'IL 57 kap 11-16 §',
+        formula: '322 400 + 2 888 + 0 + 0 = 325 288',
+      },
+    ],
+  },
 ];

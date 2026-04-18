@@ -34,7 +34,7 @@ import { calculate as k10Calc } from '../skills/k10/calculate.js';
 
 interface SkillEntry {
   cases: GoldenCase[];
-  fn?: (input: Record<string, number | string | boolean>) => unknown;
+  fn?: (input: Record<string, number | string | boolean | unknown[] | Record<string, unknown>>) => unknown;
 }
 
 const SKILLS: Record<string, SkillEntry> = {
