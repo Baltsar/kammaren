@@ -1,5 +1,7 @@
 {
   "version": 2,
+  "buildCommand": "mkdir -p public",
+  "outputDirectory": "public",
   "functions": {
     "api/verify.ts": {
       "maxDuration": 10
