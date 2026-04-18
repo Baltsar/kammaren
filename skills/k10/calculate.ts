@@ -100,7 +100,11 @@ function parseAndValidate(input: SkillInput): K10Input {
   const anskaffningsvarde    = Number(input['anskaffningsvarde']);
   const agarandel_procent    = Number(input['agarandel_procent']);
   const total_lonesumma      = 'total_lonesumma' in input ? Number(input['total_lonesumma']) : 0;
-  const eigen_lon             = 'eigen_lon' in input ? Number(input['eigen_lon']) : 0;
+  // Accept both `egen_lon` (svenska, rekommenderat) och `eigen_lon` (legacy).
+  const eigen_lon_raw = 'egen_lon' in input
+    ? input['egen_lon']
+    : ('eigen_lon' in input ? input['eigen_lon'] : 0);
+  const eigen_lon            = Number(eigen_lon_raw);
   const sparat_utrymme       = 'sparat_utrymme' in input ? Number(input['sparat_utrymme']) : 0;
   const inkomstar            = 'inkomstar' in input ? Number(input['inkomstar']) : K10_CONSTANTS_2026.INKOMSTAR;
 
@@ -122,7 +126,7 @@ function parseAndValidate(input: SkillInput): K10Input {
   }
   if (isNaN(eigen_lon) || eigen_lon < 0) {
     throw new Error(
-      `Ogiltigt värde: eigen_lon=${input['eigen_lon']}, förväntat >= 0.`,
+      `Ogiltigt värde: egen_lon=${eigen_lon_raw}, förväntat >= 0.`,
     );
   }
   if (isNaN(sparat_utrymme) || sparat_utrymme < 0) {
@@ -189,7 +193,17 @@ export function calculate(input: SkillInput): SkillOutput {
         `Inget lönebaserat utrymme (IL 57 kap 16 §).`,
       );
       lonebaserat = 0;
-    } else if (tak_50x > 0 && lonebaserat_fore_tak > tak_50x) {
+    } else if (eigen_lon === 0) {
+      // 50x-taket = 50 × egen_lon. Vid egen_lon = 0 blir taket 0 → lonebaserat = 0.
+      // Tidigare bug: taket skippades när tak_50x=0, vilket gav fullt lönebaserat
+      // trots att ägaren saknade lön.
+      warnings.push(
+        `Ägarens egna lön är 0 kr. 50x-taket (IL 57 kap 16 §) begränsar ` +
+        `lönebaserat utrymme till 50 × 0 = 0 kr. För att nyttja lönebaserat ` +
+        `utrymme krävs att ägaren själv (eller närstående) tar ut kontant lön.`,
+      );
+      lonebaserat = 0;
+    } else if (lonebaserat_fore_tak > tak_50x) {
       warnings.push(
         `50x-tak: lönebaserat cappat från ${lonebaserat_fore_tak} kr ` +
         `till ${tak_50x} kr (50 × ${eigen_lon} kr ägarens lön) (IL 57:16).`,
@@ -281,10 +295,10 @@ export const k10Skill: Skill = {
       required: false,
       description: 'Total kontant lönesumma i bolaget inkl. dotterbolag (SEK)',
     },
-    eigen_lon: {
+    egen_lon: {
       type: 'number',
       required: false,
-      description: 'Ägarens egna kontanta bruttolön (SEK)',
+      description: 'Ägarens egna kontanta bruttolön (SEK). Alias: eigen_lon.',
     },
     sparat_utrymme: {
       type: 'number',

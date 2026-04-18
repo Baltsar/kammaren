@@ -121,36 +121,47 @@ function parseAndValidate(input: SkillInput): BolagsskattInput {
     );
   }
 
-  // befintliga_fonder kodas som JSON-sträng (SkillInput stöder ej arrayer)
+  // befintliga_fonder tillåts som (a) array direkt, (b) JSON-sträng, eller (c) tom.
   let befintliga_fonder: FondPost[] = [];
-  if ('befintliga_fonder' in input && input['befintliga_fonder'] !== '') {
-    try {
-      const raw = JSON.parse(String(input['befintliga_fonder']));
-      if (!Array.isArray(raw)) {
-        throw new Error('befintliga_fonder måste vara en JSON-array.');
+  if ('befintliga_fonder' in input && input['befintliga_fonder'] !== '' && input['befintliga_fonder'] !== null) {
+    const rawInput = input['befintliga_fonder'];
+    let parsed: unknown;
+    if (Array.isArray(rawInput)) {
+      parsed = rawInput;
+    } else if (typeof rawInput === 'string') {
+      try {
+        parsed = JSON.parse(rawInput);
+      } catch (err) {
+        throw new Error(
+          `Ogiltigt värde: befintliga_fonder=${rawInput}. ` +
+          `Förväntat JSON-array-sträng, t.ex. '[{"year":2023,"amount":100000}]'. ` +
+          (err instanceof Error ? err.message : ''),
+        );
       }
-      befintliga_fonder = raw.map((f: unknown) => {
-        if (
-          typeof f !== 'object' || f === null ||
-          typeof (f as Record<string, unknown>)['year'] !== 'number' ||
-          typeof (f as Record<string, unknown>)['amount'] !== 'number'
-        ) {
-          throw new Error(
-            `Ogiltig fondpost: ${JSON.stringify(f)}. Förväntat {year: number, amount: number}.`,
-          );
-        }
-        return {
-          year: (f as { year: number; amount: number }).year,
-          amount: (f as { year: number; amount: number }).amount,
-        };
-      });
-    } catch (err) {
+    } else {
       throw new Error(
-        `Ogiltigt värde: befintliga_fonder=${input['befintliga_fonder']}. ` +
-        `Förväntat JSON-sträng, t.ex. '[{"year":2023,"amount":100000}]'. ` +
-        (err instanceof Error ? err.message : ''),
+        `Ogiltigt värde: befintliga_fonder måste vara en array eller JSON-sträng. Fick ${typeof rawInput}.`,
       );
     }
+
+    if (!Array.isArray(parsed)) {
+      throw new Error('befintliga_fonder måste vara en array.');
+    }
+    befintliga_fonder = parsed.map((f: unknown) => {
+      if (
+        typeof f !== 'object' || f === null ||
+        typeof (f as Record<string, unknown>)['year'] !== 'number' ||
+        typeof (f as Record<string, unknown>)['amount'] !== 'number'
+      ) {
+        throw new Error(
+          `Ogiltig fondpost: ${JSON.stringify(f)}. Förväntat {year: number, amount: number}.`,
+        );
+      }
+      return {
+        year: (f as { year: number; amount: number }).year,
+        amount: (f as { year: number; amount: number }).amount,
+      };
+    });
   }
 
   return { taxable_profit, periodiseringsfond_avsattning, befintliga_fonder, underskott_foregaende_ar };

@@ -6,7 +6,9 @@
  */
 
 export interface SkillInput {
-  [key: string]: number | string | boolean;
+  // Arrays/objekt tillåts för strukturerad input (t.ex. bolagsskatt.befintliga_fonder).
+  // Skills ska validera vid parsning och kasta Error vid fel typ.
+  [key: string]: number | string | boolean | unknown[] | Record<string, unknown>;
 }
 
 export interface SkillOutput {

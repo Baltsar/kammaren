@@ -13,7 +13,8 @@ import chalk from 'chalk';
 export interface GoldenCase {
   name: string;
   description: string;
-  input: Record<string, number | string | boolean>;
+  // Arrays/objekt tillåts för strukturerad input (matchar SkillInput).
+  input: Record<string, number | string | boolean | unknown[] | Record<string, unknown>>;
   assertions: Assertion[];
 }
 
@@ -66,7 +67,7 @@ function getField(obj: unknown, path: string): unknown {
 export function verify(
   skill: string,
   cases: GoldenCase[],
-  skillFn: (input: Record<string, number | string | boolean>) => unknown,
+  skillFn: (input: Record<string, number | string | boolean | unknown[] | Record<string, unknown>>) => unknown,
 ): VerificationReport {
   const report: VerificationReport = {
     skill,

@@ -6,8 +6,9 @@
  *   POST /api/verify (+ expected) → VERIFY: PASS/FAIL + diff
  *   POST /api/verify (ingen expected) → CALCULATE: result + breakdown + sources
  *
- * KAMMAREN kör samma deterministiska motor som backas av 304 assertions.
- * Källkod: github.com/Baltsar/falk
+ * KAMMAREN kör samma deterministiska motor som backas av 144 golden-assertions
+ * (ag-avgifter 19 + moms 34 + bolagsskatt 49 + k10 39 + regelversion 3).
+ * Källkod: github.com/Baltsar/kammaren
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
@@ -73,7 +74,7 @@ const SKILL_METADATA: Record<SkillName, {
     input_fields: {
       taxable_profit:                'number (required) — Skattemässigt resultat SEK (kan vara negativt)',
       periodiseringsfond_avsattning: 'number (optional) — Ny periodiseringsfond-avsättning SEK',
-      befintliga_fonder:             'string (optional) — JSON-array: [{year:number, amount:number}]',
+      befintliga_fonder:             'array|string (optional) — [{year:number, amount:number}] (array eller JSON-sträng)',
       underskott_foregaende_ar:      'number (optional) — Ackumulerat underskott från tidigare år SEK',
     },
     result_fields: {
@@ -86,7 +87,7 @@ const SKILL_METADATA: Record<SkillName, {
       underskottsavdrag:             'Utnyttjat underskottsavdrag',
     },
     source: 'IL 65 kap 10 §',
-    assertions: '46/46 PASS',
+    assertions: '49/49 PASS',
   },
   k10: {
     description: 'K10 Gränsbelopp 2026 — Inkomstskattelagen 57 kap (3:12-reglerna)',
@@ -94,7 +95,7 @@ const SKILL_METADATA: Record<SkillName, {
       anskaffningsvarde:  'number (required) — Anskaffningsvärde för aktierna SEK',
       agarandel_procent:  'number (required) — Ägarandel i procent 0.01–100',
       total_lonesumma:    'number (optional) — Total kontant lönesumma inkl. dotterbolag SEK',
-      eigen_lon:          'number (optional) — Ägarens egna bruttolön SEK',
+      egen_lon:           'number (optional) — Ägarens egna bruttolön SEK (alias: eigen_lon)',
       sparat_utrymme:     'number (optional) — Sparat gränsbelopp från föregående år SEK',
       indexupprakning:    'boolean (optional) — Uppräkna sparat utrymme med SBR-ränta',
     },
@@ -109,7 +110,7 @@ const SKILL_METADATA: Record<SkillName, {
       gransbelopp:              'Totalt gränsbelopp (utdelningsutrymme till 20%)',
     },
     source: 'IL 57 kap 11 §',
-    assertions: '34/34 PASS',
+    assertions: '39/39 PASS',
   },
 };
 
@@ -170,7 +171,7 @@ function handleGet(res: VercelResponse): void {
   res.status(200).json({
     skills: SKILL_METADATA,
     engine_version: '2026.1',
-    total_assertions: '304/304 PASS',
+    total_assertions: '144/144 PASS',
     usage: {
       list:      'GET /api/verify',
       calculate: 'POST /api/verify  { skill, input }',

@@ -590,4 +590,48 @@ export const BOLAGSSKATT_CASES: GoldenCase[] = [
       },
     ],
   },
+
+  // ── Case 14: befintliga_fonder som array direkt (ej JSON-sträng) ─────────
+  // API-klienter skickar naturligt JSON-arrayer. Tidigare kastades
+  // "Calculation failed: [object Object]" eftersom String([{...}]) gav
+  // ogiltigt JSON. Nu ska array accepteras identiskt med JSON-sträng.
+  {
+    name: 'befintliga_fonder accepteras som array direkt',
+    description:
+      'Samma indata som Case 8 men array direkt istället för JSON-sträng. ' +
+      'Schablonintäkt = 180 000 × 0.0255 = 4 590. Återföring 2019-fond = 100 000. ' +
+      'Skattepliktig vinst = 500 000 + 100 000 + 4 590 = 604 590.',
+    input: {
+      taxable_profit: 500_000,
+      periodiseringsfond_avsattning: 0,
+      befintliga_fonder: [
+        { year: 2019, amount: 100_000 },
+        { year: 2023, amount: 80_000 },
+      ],
+      underskott_foregaende_ar: 0,
+    },
+    assertions: [
+      {
+        field: 'result.aterforing',
+        expected: 100_000,
+        tolerance: 0,
+        source: 'IL 30 kap 7 §',
+        formula: '2026 − 2019 = 7 ≥ PFOND_MAX_AR → aterforing = 100000',
+      },
+      {
+        field: 'result.schablonintakt',
+        expected: 4_590,
+        tolerance: 0,
+        source: 'IL 30 kap 6a §, statslåneränta 2.55%',
+        formula: '180000 × 0.0255 = 4590',
+      },
+      {
+        field: 'result.skattepliktig_vinst',
+        expected: 604_590,
+        tolerance: 0,
+        source: 'IL 65 kap 10 §',
+        formula: '500000 + 100000 + 4590 = 604590',
+      },
+    ],
+  },
 ];
