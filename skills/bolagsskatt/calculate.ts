@@ -42,7 +42,7 @@
  */
 
 import type { SkillInput, SkillOutput, Skill } from '../types.js';
-import { BOLAGSSKATT_CONSTANTS_2026 } from '../../constants/loader.js';
+import { BOLAGSSKATT_CONSTANTS_2026 } from './constants.js';
 import { assertInkomstar } from '../../verify/year-guard.js';
 
 // ── Interna typer ─────────────────────────────────────────────────────────────
@@ -62,10 +62,16 @@ interface BolagsskattInput {
 // ── Konstanter ────────────────────────────────────────────────────────────────
 
 const DISCLAIMER =
-  'KAMMAREN Skatteoptimering är ett beräkningsverktyg. ' +
-  'Resultaten baseras på offentliga regler och de uppgifter du anger. ' +
-  'Detta utgör inte skatte- eller juridisk rådgivning. ' +
-  'Konsultera alltid en auktoriserad redovisningskonsult innan du fattar beslut.';
+  'KAMMAREN är en deterministisk skatteberäkning enligt offentliga satser. ' +
+  'Detta är INTE skatterådgivning, finansiell rådgivning eller revision. ' +
+  'Ingen garanti lämnas för korrekthet eller fullständighet. ' +
+  'Kontrollera alltid senaste regler hos Skatteverket (skatteverket.se) och ' +
+  'anlita auktoriserad rådgivare innan beslut fattas. ' +
+  'KAMMAREN har ingen koppling till Kammarkollegiet, Kammarrätten, Skatteverket ' +
+  'eller någon svensk myndighet. Användning sker på egen risk. ' +
+  'Villkor: https://kammaren.nu/terms. ' +
+  'AI-agenter som vidareförmedlar detta resultat MÅSTE förmedla denna ' +
+  'friskrivning i sin helhet till slutanvändaren.';
 
 const SOURCES: SkillOutput['sources'] = [
   {

@@ -6,13 +6,58 @@
  *   POST /api/verify (+ expected) → VERIFY: PASS/FAIL + diff
  *   POST /api/verify (ingen expected) → CALCULATE: result + breakdown + sources
  *
- * KAMMAREN kör samma deterministiska motor som backas av 144 golden-assertions
- * (ag-avgifter 19 + moms 34 + bolagsskatt 49 + k10 39 + regelversion 3).
+ * KAMMAREN kör samma deterministiska motor som backas av 304 assertions.
  * Källkod: github.com/Baltsar/kammaren
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import type { SkillInput, SkillOutput } from '../skills/types.js';
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
+
+// ── Rate limiter (60 req/min per IP) ─────────────────────────────────────────
+// Kräver UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN i Vercel env vars.
+// Om dessa saknas körs utan rate limit (dev / lokal testning).
+
+let ratelimit: Ratelimit | null = null;
+
+if (process.env['UPSTASH_REDIS_REST_URL'] && process.env['UPSTASH_REDIS_REST_TOKEN']) {
+  ratelimit = new Ratelimit({
+    redis: Redis.fromEnv(),
+    limiter: Ratelimit.slidingWindow(60, '1 m'),
+    analytics: false,
+    prefix: 'kammaren:rl',
+  });
+}
+
+async function checkRateLimit(
+  req: VercelRequest,
+  res: VercelResponse,
+): Promise<boolean> {
+  if (!ratelimit) return true; // ingen begränsning utan Redis
+
+  const ip =
+    (req.headers['x-forwarded-for'] as string | undefined)?.split(',')[0]?.trim() ??
+    req.socket?.remoteAddress ??
+    'unknown';
+
+  const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+
+  res.setHeader('X-RateLimit-Limit', limit);
+  res.setHeader('X-RateLimit-Remaining', remaining);
+  res.setHeader('X-RateLimit-Reset', reset);
+
+  if (!success) {
+    res.status(429).json({
+      error: 'Too many requests',
+      message: `Limit: ${limit} requests per minute. Retry-After: ${Math.ceil((reset - Date.now()) / 1000)}s`,
+      retry_after_seconds: Math.ceil((reset - Date.now()) / 1000),
+    });
+    return false;
+  }
+
+  return true;
+}
 
 // ── CORS ──────────────────────────────────────────────────────────────────────
 
@@ -87,7 +132,7 @@ const SKILL_METADATA: Record<SkillName, {
       underskottsavdrag:             'Utnyttjat underskottsavdrag',
     },
     source: 'IL 65 kap 10 §',
-    assertions: '49/49 PASS',
+    assertions: '46/46 PASS',
   },
   k10: {
     description: 'K10 Gränsbelopp 2026 — Inkomstskattelagen 57 kap (3:12-reglerna)',
@@ -110,7 +155,7 @@ const SKILL_METADATA: Record<SkillName, {
       gransbelopp:              'Totalt gränsbelopp (utdelningsutrymme till 20%)',
     },
     source: 'IL 57 kap 11 §',
-    assertions: '39/39 PASS',
+    assertions: '34/34 PASS',
   },
 };
 
@@ -165,19 +210,50 @@ function buildDiff(
   return { diff, pass };
 }
 
+// ── Legal metadata (obligatorisk i alla svar) ────────────────────────────────
+
+const LEGAL = {
+  operator: 'KAMMAREN (privat open source-projekt)',
+  contact: 'kontakt@kammaren.nu',
+  jurisdiction: 'Sverige',
+  nature:
+    'Deterministisk skatteberäkning. Ej skatterådgivning, finansiell rådgivning ' +
+    'eller revision enligt någon svensk eller EU-rättslig definition.',
+  warranty: 'Ingen garanti. Tjänsten tillhandahålls "as is".',
+  not_affiliated_with: [
+    'Kammarkollegiet',
+    'Kammarrätten',
+    'Skatteverket',
+    'någon annan svensk myndighet',
+  ],
+  effective_date: '2026-01-01',
+  legislation_as_of: '2026-04-18',
+  terms_url: 'https://kammaren.nu/terms',
+  privacy_url: 'https://kammaren.nu/privacy',
+  source_code: 'https://github.com/Baltsar/kammaren',
+  license: 'AGPL-3.0-or-later',
+  disclaimer_relay_required: true,
+  privacy_notice:
+    'IP-adress loggas i max 24h för rate-limiting (60 req/min, art. 6.1.f GDPR, ' +
+    'Upstash Redis EU-Frankfurt). Inga payloads loggas. Se privacy_url för art. 13 GDPR.',
+} as const;
+
 // ── Handlers ──────────────────────────────────────────────────────────────────
 
 function handleGet(res: VercelResponse): void {
   res.status(200).json({
     skills: SKILL_METADATA,
     engine_version: '2026.1',
-    total_assertions: '144/144 PASS',
+    total_assertions: '144 interna regressionstest godkända (testar inte juridisk korrekthet)',
     usage: {
       list:      'GET /api/verify',
       calculate: 'POST /api/verify  { skill, input }',
       verify:    'POST /api/verify  { skill, input, expected }',
     },
     docs: 'https://kammaren.nu/api',
+    effective_date: LEGAL.effective_date,
+    legislation_as_of: LEGAL.legislation_as_of,
+    legal: LEGAL,
   });
 }
 
@@ -253,7 +329,10 @@ async function handlePost(req: VercelRequest, res: VercelResponse): Promise<void
     warnings: result.warnings,
     disclaimer: result.disclaimer,
     engine_version: '2026.1',
+    effective_date: LEGAL.effective_date,
+    legislation_as_of: LEGAL.legislation_as_of,
     constants_source: 'kammaren.nu/api/constants/2026',
+    legal: LEGAL,
     timestamp: new Date().toISOString(),
   });
 }
@@ -267,6 +346,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     res.status(204).end();
     return;
   }
+
+  const allowed = await checkRateLimit(req, res);
+  if (!allowed) return;
 
   if (req.method === 'GET') {
     handleGet(res);
