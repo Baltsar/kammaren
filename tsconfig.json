@@ -14,6 +14,12 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["orchestrator/**/*.ts", "src/**/*.ts", "skills/**/*.ts", "constants/**/*.ts", "verify/**/*.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["orchestrator/**/*.ts", "src/**/*.ts", "skills/**/*.ts", "constants/**/*.ts", "verify/**/*.ts", "api/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts",
+    "verify/golden-cases/year-guard.cases.ts",
+    "orchestrator/sie4-safety.ts"
+  ]
 }
