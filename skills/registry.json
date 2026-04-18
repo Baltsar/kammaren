@@ -1,6 +1,51 @@
 {
   "version": "1.0",
+  "engine_version": "2026.1",
   "skills": [
+    {
+      "id": "ag-avgifter",
+      "name": "Arbetsgivaravgifter",
+      "category": "lon",
+      "tier": "free",
+      "status": "implemented",
+      "path": "./ag-avgifter/calculate.ts",
+      "sources": "./ag-avgifter/sources.json",
+      "law": "SFL 2 kap 26 §",
+      "assertions": "19/19"
+    },
+    {
+      "id": "moms",
+      "name": "Momsberäknare",
+      "category": "moms",
+      "tier": "free",
+      "status": "implemented",
+      "path": "./moms/calculate.ts",
+      "sources": "./moms/sources.json",
+      "law": "Mervärdesskattelagen (2023:200)",
+      "assertions": "34/34"
+    },
+    {
+      "id": "bolagsskatt",
+      "name": "Bolagsskatt",
+      "category": "skatt",
+      "tier": "free",
+      "status": "implemented",
+      "path": "./bolagsskatt/calculate.ts",
+      "sources": "./bolagsskatt/sources.json",
+      "law": "IL 65 kap 10 §",
+      "assertions": "49/49"
+    },
+    {
+      "id": "k10",
+      "name": "K10-underlag (3:12)",
+      "category": "skatt",
+      "tier": "free",
+      "status": "implemented",
+      "path": "./k10/calculate.ts",
+      "sources": "./k10/sources.json",
+      "law": "IL 57 kap",
+      "assertions": "39/39"
+    },
     {
       "id": "tax-optimizer",
       "name": "Skatteoptimering 3:12",
@@ -9,52 +54,7 @@
       "status": "implemented",
       "version": "2026-03-14-v1",
       "path": "./tax-optimizer/optimize.ts",
-      "sprint": 1
-    },
-    {
-      "id": "arbetsgivaravgifter",
-      "name": "Arbetsgivaravgifter",
-      "category": "lon",
-      "tier": "free",
-      "status": "planned",
-      "path": "./arbetsgivaravgifter/calculate.ts",
-      "sprint": 1
-    },
-    {
-      "id": "momsberaknare",
-      "name": "Momsberäknare",
-      "category": "moms",
-      "tier": "free",
-      "status": "planned",
-      "path": "./momsberaknare/calculate.ts",
-      "sprint": 1
-    },
-    {
-      "id": "periodiseringsfond",
-      "name": "Periodiseringsfond",
-      "category": "skatt",
-      "tier": "free",
-      "status": "planned",
-      "path": "./periodiseringsfond/calculate.ts",
-      "sprint": 1
-    },
-    {
-      "id": "bolagsskatt",
-      "name": "Bolagsskatt",
-      "category": "skatt",
-      "tier": "free",
-      "status": "planned",
-      "path": "./bolagsskatt/calculate.ts",
-      "sprint": 1
-    },
-    {
-      "id": "k10-underlag",
-      "name": "K10-underlag (3:12)",
-      "category": "skatt",
-      "tier": "free",
-      "status": "planned",
-      "path": "./k10-underlag/calculate.ts",
-      "sprint": 1
+      "law": "IL 57 kap (kombinerat med 65 kap, 3 kap 11 §)"
     }
   ]
 }
