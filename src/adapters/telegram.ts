@@ -1,5 +1,11 @@
 /**
  * Telegram adapter — Grammy bot → handleMessage
+ *
+ * ⚠️  WIP — beror på ../chat-handler.ts som är ej färdig i publika repot
+ *     (kräver agents/ceo/SOUL.md m.fl.). Boten startar men kraschar vid
+ *     första meddelandet. Kör inte mot en publik Telegram-bot utan
+ *     operatörsmedvetenhet — ingen autentisering, alla som hittar botens
+ *     @-namn kan interagera.
  */
 
 import '../load-env.js';

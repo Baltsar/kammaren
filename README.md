@@ -21,7 +21,7 @@ Any bookkeeping system (Fortnox, Bokio, gnubok, SIE4, Excel)
         │  skills/    │  1 live · 4 built · 29 planned
         │  verify/    │  258 assertions against official tables
         │  constants/ │  year-guarded, refuses outdated data
-        │  vault/     │  SHA-256 hash chain, write-once
+        │  vault/     │  write-once audit log (planned, not yet implemented)
         └─────┬──────┘
               │
         "Set salary to 55,033 SEK/month.
@@ -188,24 +188,28 @@ The system **refuses** to calculate 2026 taxes with 2025 constants. `year-guard.
 
 Every number comes from config, never hardcoded. Every config value has a comment citing the specific paragraph in Swedish law.
 
-### Vault
+### Vault (planned)
 
-Write-once. SHA-256 hash chain. Every calculation logged. Every entry hashed with the previous. Change one number retroactively and the entire chain breaks. Revision ready.
+The intended design: write-once audit log with SHA-256 hash chain. Every calculation logged. Every entry hashed with the previous. Change one number retroactively and the entire chain breaks.
 
 ```
 Hₙ = SHA256(Hₙ₋₁ ∥ Dataₙ)
 ```
 
-### Agents
+**Status:** *Not yet implemented in this repository.* The `vault/` directory is currently empty. Track progress in [STATUS.md](STATUS.md).
+
+### Agents (WIP — not in this repository yet)
 
 | Agent | Role | Status |
 |-------|------|--------|
-| Falk (orchestrator) | Routes questions to the right skill. Never calculates. | **Live** |
+| Falk (orchestrator) | Routes questions to the right skill. Never calculates. | WIP — not in public repo |
 | Finance | Classifies transactions against BAS chart of accounts. | Architecture defined |
 | Adler (auditor) | Independent review on a *separate* model. | Architecture defined |
 | Researcher | Monitors Skatteverket, Riksdagen, BFN for regulatory changes. | Architecture defined |
 
-Each agent has three files: `SOUL.md` (identity), `SKILL.md` (capabilities), `RULES.md` (constraints). The auditor always runs on a different LLM than the agent it reviews.
+The intended design: each agent has three files — `SOUL.md` (identity), `SKILL.md` (capabilities), `RULES.md` (constraints). The auditor always runs on a different LLM than the agent it reviews.
+
+The agent layer is under active development in a separate working tree and has not yet been synced to this public repository. `src/chat-handler.ts` and `src/adapters/` are present as placeholders but depend on agent files that are not yet shipped.
 
 ---
 
@@ -270,13 +274,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 | Integration test (full chain) | **PASS**, 13 tests |
 | Cross-validation (tax-opt vs K10) | **PASS**, 6 scenarios |
 | Stress test (10 company types) | **PASS**, 100/100 |
-| Vault + SHA-256 hash chain | **Built** |
-| Chat-handler (channel-agnostic) | **Built** |
-| Telegram adapter | **Built** (64 lines) |
-| CLI adapter | **Built** (37 lines) |
+| Vault + SHA-256 hash chain | Planned — empty `vault/` in repo today |
+| Chat-handler (channel-agnostic) | WIP — depends on agent files not yet in public repo |
+| Telegram adapter | WIP — depends on chat-handler |
+| CLI adapter | WIP — depends on chat-handler |
 | npm package (kammaren-tax-engine) | **Published** (v1.0.4, tax-optimizer) |
 | MCP server | **Live** (mcp.kammaren.nu) |
 | REST API | Planned |
+| Falk (orchestrator) agent | WIP — not in public repo |
 | Finance agent | Architecture defined |
 | Auditor agent | Architecture defined |
 | Researcher agent | Architecture defined |

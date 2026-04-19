@@ -6,7 +6,7 @@
  *   POST /api/verify (+ expected) → VERIFY: PASS/FAIL + diff
  *   POST /api/verify (ingen expected) → CALCULATE: result + breakdown + sources
  *
- * KAMMAREN kör samma deterministiska motor som backas av 304 assertions.
+ * KAMMAREN kör samma deterministiska motor som backas av 258 assertions.
  * Källkod: github.com/Baltsar/kammaren
  */
 
@@ -17,11 +17,28 @@ import { Redis } from '@upstash/redis';
 
 // ── Rate limiter (60 req/min per IP) ─────────────────────────────────────────
 // Kräver UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN i Vercel env vars.
-// Om dessa saknas körs utan rate limit (dev / lokal testning).
+// I dev/preview/lokalt körs utan rate limit om envet saknas.
+// I produktion (VERCEL_ENV === 'production') fail-closed: kasta vid module-
+// load så Vercel surfar 500 istället för tyst släppa trafik förbi limiten.
+// Skälet: PRIVACY.md utlovar rate-limiting (art. 6.1.f GDPR) — koden måste
+// upprätthålla det löftet, inte bara referera till det.
+
+const IS_PROD = process.env['VERCEL_ENV'] === 'production';
+const HAS_UPSTASH =
+  !!process.env['UPSTASH_REDIS_REST_URL'] &&
+  !!process.env['UPSTASH_REDIS_REST_TOKEN'];
+
+if (IS_PROD && !HAS_UPSTASH) {
+  throw new Error(
+    'Rate limiting krävs i produktion: sätt UPSTASH_REDIS_REST_URL och ' +
+    'UPSTASH_REDIS_REST_TOKEN i Vercel env vars. PRIVACY.md utlovar ' +
+    'rate-limiting — koden måste upprätthålla det löftet.',
+  );
+}
 
 let ratelimit: Ratelimit | null = null;
 
-if (process.env['UPSTASH_REDIS_REST_URL'] && process.env['UPSTASH_REDIS_REST_TOKEN']) {
+if (HAS_UPSTASH) {
   ratelimit = new Ratelimit({
     redis: Redis.fromEnv(),
     limiter: Ratelimit.slidingWindow(60, '1 m'),
@@ -214,7 +231,7 @@ function buildDiff(
 
 const LEGAL = {
   operator: 'KAMMAREN (privat open source-projekt)',
-  contact: 'kontakt@kammaren.nu',
+  contact: 'info@kammaren.nu',
   jurisdiction: 'Sverige',
   nature:
     'Deterministisk skatteberäkning. Ej skatterådgivning, finansiell rådgivning ' +
@@ -244,7 +261,7 @@ function handleGet(res: VercelResponse): void {
   res.status(200).json({
     skills: SKILL_METADATA,
     engine_version: '2026.1',
-    total_assertions: '144 interna regressionstest godkända (testar inte juridisk korrekthet)',
+    total_assertions: '258 interna regressionstest godkända (testar inte juridisk korrekthet)',
     usage: {
       list:      'GET /api/verify',
       calculate: 'POST /api/verify  { skill, input }',

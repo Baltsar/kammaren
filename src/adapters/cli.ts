@@ -1,5 +1,9 @@
 /**
  * CLI adapter — REPL → handleMessage
+ *
+ * ⚠️  WIP — beror på ../chat-handler.ts som är ej färdig i publika repot
+ *     (kräver agents/ceo/SOUL.md m.fl.). REPL startar men kraschar vid
+ *     första frågan tills agent-filerna är på plats.
  */
 
 import '../load-env.js';

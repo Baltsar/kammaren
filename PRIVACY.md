@@ -8,7 +8,7 @@
 ## 1. Personuppgiftsansvarig
 
 - **Operatör:** Gustaf Garnow, privatperson, Sverige
-- **Kontakt:** kontakt@kammaren.nu
+- **Kontakt:** info@kammaren.nu
 - **Tjänst:** KAMMAREN (`https://kammaren.nu`)
 
 ## 2. Vilka personuppgifter behandlas
@@ -63,7 +63,7 @@ Som registrerad har du rätt att:
 - Begära **dataportabilitet** (art. 20)
 - Lämna klagomål till **Integritetsskyddsmyndigheten** (imy.se)
 
-**Obs:** Då KAMMAREN endast lagrar IP-adress ≤24 h och inte kan identifiera dig utan ytterligare information (t.ex. din ISP:s loggar) är vissa rättigheter i praktiken begränsade. Kontakta oss via kontakt@kammaren.nu för frågor.
+**Obs:** Då KAMMAREN endast lagrar IP-adress ≤24 h och inte kan identifiera dig utan ytterligare information (t.ex. din ISP:s loggar) är vissa rättigheter i praktiken begränsade. Kontakta oss via info@kammaren.nu för frågor.
 
 ## 6. Registerförteckning (art. 30 GDPR)
 
@@ -86,7 +86,7 @@ KAMMAREN använder **inga cookies** på API-nivå. Docs-sajten (`https://kammare
 
 ## 9. Kontakt och klagomål
 
-- **Operatör:** kontakt@kammaren.nu
+- **Operatör:** info@kammaren.nu
 - **Tillsynsmyndighet:** Integritetsskyddsmyndigheten (IMY), https://imy.se
 
 ## 10. Ändringar

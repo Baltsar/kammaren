@@ -11,7 +11,7 @@
 
 - **Tjänst:** KAMMAREN (`https://kammaren.nu`), ett privat open source-projekt.
 - **Operatör:** Gustaf Garnow, privatperson, Sverige.
-- **Kontakt:** kontakt@kammaren.nu
+- **Kontakt:** info@kammaren.nu
 - **Källkod:** https://github.com/Baltsar/kammaren (publik, AGPL-3.0-or-later)
 
 KAMMAREN **har ingen koppling** till Kammarkollegiet, Kammarrätten, Skatteverket eller någon annan svensk myndighet. Namnlikheten är slumpmässig.
@@ -118,4 +118,4 @@ Svensk rätt tillämpas. Tvist avgörs av Stockholms tingsrätt som första inst
 
 ---
 
-**Frågor:** kontakt@kammaren.nu
+**Frågor:** info@kammaren.nu

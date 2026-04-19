@@ -1,6 +1,23 @@
 /**
  * Chat Handler — CEO-agent chat via Anthropic API
  *
+ * ⚠️  WIP — EJ FÄRDIGT I PUBLIKA REPOT
+ *
+ * Denna modul är en del av det pågående agent-arbetet (CEO/Finance/Auditor/
+ * Researcher) och kräver filer som ännu inte ligger i publika repot:
+ *   - agents/ceo/SOUL.md
+ *   - agents/ceo/SKILL.md
+ *   - vault/company/profile.json
+ *
+ * Att köra `bun run bot:telegram` eller `bun run chat` innan dessa finns
+ * kommer resultera i ENOENT vid första meddelandet. Modulen ligger kvar i
+ * publika repot av transparensskäl — roadmap finns i STATUS.md.
+ *
+ * Säkerhet: `vault_read`-tooltillåter LLM:en att läsa filer under vault/.
+ * Path-traversal-skyddet nedan är syntaktiskt; innehållsklassificering
+ * (public/internal/sensitive) är ännu inte implementerad. Använd inte mot
+ * vault med riktig PII innan den layern finns.
+ *
  * Tar emot meddelanden, anropar Claude med CEO:ns SOUL+SKILL som system prompt,
  * och exponerar 4 tools: tax_optimize, vault_read, list_invoices, list_pending.
  */

@@ -31,12 +31,23 @@ Last updated: April 2026
 
 | Component | Status |
 |-----------|--------|
-| Vault + SHA-256 | Built |
+| Vault + SHA-256 | Planned (empty in public repo) |
 | Year-guard | Live |
-| Chat-handler | Built |
-| Telegram adapter | Built |
-| CLI adapter | Built |
+| Chat-handler | WIP (depends on agent files not in public repo) |
+| Telegram adapter | WIP (depends on chat-handler) |
+| CLI adapter | WIP (depends on chat-handler) |
 | MCP server | Live (mcp.kammaren.nu) |
 | npm package | Published (1.0.4) |
-| REST API | Planned |
+| REST API (/api/verify) | Live on Vercel |
 | Web calculator | Live (kammaren.nu) |
+
+## Agents
+
+| Agent | Status |
+|-------|--------|
+| Falk (orchestrator) | WIP — not in public repo |
+| Finance | Architecture defined |
+| Adler (auditor) | Architecture defined |
+| Researcher | Architecture defined |
+
+The agent layer (including SOUL.md/SKILL.md/RULES.md per agent) is under active development in a separate working tree and has not yet been synced to this public repository.

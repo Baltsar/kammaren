@@ -1,7 +1,7 @@
 {
-  "name": "zhc-swedish-ceo",
+  "name": "kammaren",
   "version": "0.1.0",
-  "description": "Sveriges första AI-drivna bolagsadministration",
+  "description": "Deterministisk skatteberäknings-kärna för svenska aktiebolag",
   "type": "module",
   "bin": {
     "zhc": "./dist/orchestrator/run.js"
