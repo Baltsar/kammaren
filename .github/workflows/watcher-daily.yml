@@ -2,9 +2,10 @@ name: Watcher daily run
 
 on:
   schedule:
-    # 06:00 Europe/Stockholm — fires twice (CET + CEST), guarded below.
-    - cron: '0 4 * * *'   # 06:00 CEST (summer)
-    - cron: '0 5 * * *'   # 06:00 CET  (winter)
+    # GitHub Actions cron is best-effort and often delayed 1–2 h.
+    # Both crons fire daily; dedupe in the watcher absorbs any duplicate.
+    - cron: '0 4 * * *'   # ~06:00 Europe/Stockholm during CEST (summer)
+    - cron: '0 5 * * *'   # ~06:00 Europe/Stockholm during CET  (winter)
   workflow_dispatch:
 
 permissions:
@@ -18,41 +19,24 @@ jobs:
   run-watcher:
     runs-on: ubuntu-latest
     steps:
-      - name: Verify 06:xx Europe/Stockholm (or manual dispatch)
-        id: tz_check
-        run: |
-          local_hour=$(TZ='Europe/Stockholm' date +%H)
-          echo "local_hour=$local_hour" >> "$GITHUB_OUTPUT"
-          if [ "$local_hour" = "06" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            echo "should_run=true"  >> "$GITHUB_OUTPUT"
-          else
-            echo "should_run=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Skipping run — local hour is $local_hour, not 06."
-          fi
-
       - name: Checkout
-        if: steps.tz_check.outputs.should_run == 'true'
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
       - name: Setup Bun
-        if: steps.tz_check.outputs.should_run == 'true'
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
 
       - name: Install dependencies
-        if: steps.tz_check.outputs.should_run == 'true'
         run: bun install --frozen-lockfile
 
       - name: Run watcher
-        if: steps.tz_check.outputs.should_run == 'true'
         run: bun run agents/watcher/poller/index.ts
 
       - name: Commit JSONL if changed
-        if: steps.tz_check.outputs.should_run == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
