@@ -7,9 +7,9 @@ per körning. Entry point: `pipeline.ts`.
 
 ## Status
 
-Watcher (Fas 1) och **classifier deterministisk v1** (Fas 2 första steget) är
-implementerade. Delivery är fortfarande no-op-stub. LLM-fallback för okända
-events är reserverad för en uppföljnings-PR.
+Watcher (Fas 1), **classifier deterministisk v1** (Fas 2 första steget) och
+**delivery via Telegram** är implementerade. LLM-fallback för okända events
+är reserverad för en uppföljnings-PR.
 
 ## Hur man kör
 
@@ -28,7 +28,12 @@ Vid framgång loggas:
     "events_loaded": 37, "customers_loaded": 1,
     "by_severity": { "info": 37, "warning": 0, "action_required": 0 }
   },
-  "delivery":   { "sent": 0, "skipped": 0 }
+  "delivery": {
+    "attempted": 1, "sent": 1,
+    "skipped_existing": 0, "skipped_severity": 36,
+    "skipped_no_chat_id": 0, "skipped_no_customer": 0, "skipped_no_event": 0,
+    "errors": 0
+  }
 }
 ```
 
@@ -55,7 +60,7 @@ Append-only JSONL, samma mönster som watcher.
 |---|---|
 | `../watcher/data/events.jsonl` | watcher |
 | `data/classifications.jsonl` | classifier (en rad per event×kund-par) |
-| `data/deliveries.jsonl` | delivery (stub: tom) |
+| `data/deliveries.jsonl` | delivery (en rad per skickad notis) |
 
 `pipeline.ts` säkerställer att tomma filer existerar innan stegen körs så att
 `loadExistingIds`-anropen inte ENOENT:ar.
@@ -116,6 +121,47 @@ samma par ger samma id varje körning, vilket gör append-only-dedupe trivial.
 och bygger ett `Set<string>`. Befintliga par hoppas över
 (`skipped_existing`). Krasch-säker: trasiga rader loggas och ignoreras.
 
+## Delivery — Telegram
+
+```
+agents/orchestrator/
+  delivery.ts                # runDelivery(): filtrera + slå upp + formattera + skicka
+  delivery/
+    telegram.ts              # sendTelegram(chatId, message) — wrappar grammy Bot
+    format.ts                # formatNotification() + escapeMarkdownV2()
+  schema/
+    delivery.ts              # Delivery + makeDeliveryId()
+```
+
+**Severity-strategi.** Endast classifications med
+`relevant === true` och `severity` i `{action_required, warning}` levereras.
+`severity: info` skippas (`skipped_severity++`) — för bullriga för att
+notifiera om dagligen.
+
+**Idempotens.** `delivery_id = sha256(classification_id + ':telegram').slice(0,16)`.
+`loadExistingIds(deliveries.jsonl)` ger en `Set<string>` som filtrerar bort
+redan levererade par. Andra körningen samma dag → noll Telegram-anrop.
+
+**Krasch-säkerhet.** En misslyckad `sendTelegram` (Telegram 400, chat
+not found, rate-limit) loggas till stderr och räknas som `errors++`.
+Pipeline fortsätter med nästa kund. Saknat event eller saknad profil
+räknas separat (`skipped_no_event`, `skipped_no_customer`) så drift kan
+diagnosticeras.
+
+**Mottagar-mappning.** `vault/customers/<orgnr>.json` har ett top-level
+`telegram_chat_id: string | null`. `null` (eller fältet saknas) → kunden
+hoppas över och `skipped_no_chat_id++` ticks. Operatören sätter värdet
+manuellt efter att kunden bundit sin bot.
+
+**Format.** MarkdownV2 med severity-emoji (`⚠️ action_required`,
+`📌 warning`, `ℹ️ info`). All dynamisk text escapas via `escapeMarkdownV2`
+för att inte krascha Telegrams parser. URL inom `[label](url)` får sin
+egen escape (endast `(`, `)`, `\\`).
+
+**Secrets.** `TELEGRAM_BOT_TOKEN` i `.env` lokalt eller som GitHub Actions
+secret. Klienten byggs lazy — körningar utan severity-träffar öppnar
+ingen koppling till Telegram alls.
+
 ## Vad nästa PR fyller i
 
 1. **LLM-fallback** för events där alla tags är `okand` (just nu räknas de
@@ -124,8 +170,11 @@ och bygger ett `Set<string>`. Befintliga par hoppas över
    vilka som missas.
 3. **`severity: 'warning'`** för deadline-events nära ikraftträdande
    (kräver datum-extraktion ur `raw.summary`).
-4. **Real delivery** — skickar relevanta classifications till Telegram eller
-   annan kanal. Skriver `Delivery`-rader till `data/deliveries.jsonl`.
+4. **Per-kund severity-konfig** — vissa kunder vill kanske ha `info`
+   också, andra bara `action_required`. Idag hårdkodas filtret.
+5. **Fler kanaler** (e-post via SMTP, eventuellt Slack). `Delivery.channel`
+   är förberett — `makeDeliveryId(classification_id, channel)` ger
+   icke-kolliderande dedupe per kanal.
 
 ## Filer som är read-only från denna PR
 

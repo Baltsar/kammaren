@@ -36,15 +36,16 @@ jobs:
       - name: Run pipeline
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: bun run agents/orchestrator/pipeline.ts
 
       - name: Commit JSONL if changed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TRACKED_FILES="agents/watcher/data/events.jsonl agents/orchestrator/data/classifications.jsonl"
+          TRACKED_FILES="agents/watcher/data/events.jsonl agents/orchestrator/data/classifications.jsonl agents/orchestrator/data/deliveries.jsonl"
           if [ -z "$(git status --porcelain $TRACKED_FILES)" ]; then
-            echo "No changes in events.jsonl or classifications.jsonl — nothing to commit."
+            echo "No changes in events/classifications/deliveries JSONL — nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
