@@ -49,6 +49,23 @@ A kernel. Like Linux is to Android, KAMMAREN is to whatever tax tool, AI agent, 
 
 ---
 
+## Disclaimer
+
+KAMMAREN är en informationstjänst för bevakning av
+regulatoriska händelser. Tjänsten utgör inte skatterådgivning,
+juridisk rådgivning eller investeringsrådgivning.
+
+Delar av källkoden i detta repository är genererade eller
+assisterade av AI-verktyg (Anthropic Claude, Berget AI).
+Koden har granskats av projektägaren men kan innehålla fel.
+Använd källkoden på eget ansvar.
+
+**Hosted service:** Se [TERMS.md](TERMS.md) och [PRIVACY.md](PRIVACY.md)
+**Licens:** [AGPL-3.0](LICENSE)
+**Säkerhetspolicy:** [SECURITY.md](SECURITY.md)
+
+---
+
 ## Quick Start
 
 ```bash

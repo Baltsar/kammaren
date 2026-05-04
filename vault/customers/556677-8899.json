@@ -26,8 +26,11 @@
   "workplace_safety_profile": {},
   "cyber_nis2_profile": {},
   "telegram_chat_id": null,
+  "consent_terms_accepted_at": "2026-05-04T00:00:00.000Z",
+  "consent_privacy_accepted_at": "2026-05-04T00:00:00.000Z",
+  "consent_b2b_acknowledged_at": "2026-05-04T00:00:00.000Z",
   "meta": {
-    "schema_version": "1.0.0",
+    "schema_version": "1.1.0",
     "profile_last_updated_at": "2026-05-04T00:00:00.000Z"
   }
 }
