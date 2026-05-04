@@ -1,7 +1,7 @@
 import type { CustomerProfile } from '../../watcher/customer-profile/types.js';
 import type { WatcherEvent } from '../../watcher/schema/event.js';
 import type { Severity } from '../schema/classification.js';
-import type { Tag } from './categories.js';
+import { IRRELEVANT_TAG, type Tag } from './categories.js';
 import { hasActionKeyword } from './event-tagger.js';
 
 type CustomerFlags = {
@@ -76,6 +76,11 @@ const TAG_RULES: ReadonlyArray<{
     matches: (f) => f.has_employees,
   },
   {
+    tag: 'arbetsmiljo',
+    rule: 'employment.employee_count>0',
+    matches: (f) => f.has_employees,
+  },
+  {
     tag: 'k10',
     rule: 'tax_profile.pays_salary_to_owner',
     matches: (f) => f.has_owner_salary,
@@ -122,9 +127,15 @@ export function matchCustomer(
   const flags = extractFlags(profile);
   const tagSet = new Set(tags);
   const onlyUnknown = tags.length === 1 && tags[0] === 'okand';
+  const onlyIrrelevant = tags.length === 1 && tags[0] === IRRELEVANT_TAG;
+
+  // If event has positive categories AND irrelevant_for_ab, ignore the irrelevant tag.
+  if (tagSet.has(IRRELEVANT_TAG) && tagSet.size > 1) {
+    tagSet.delete(IRRELEVANT_TAG);
+  }
 
   const matched: { tag: Tag; rule: string }[] = [];
-  if (!onlyUnknown) {
+  if (!onlyUnknown && !onlyIrrelevant) {
     for (const entry of TAG_RULES) {
       if (tagSet.has(entry.tag) && entry.matches(flags)) {
         matched.push({ tag: entry.tag, rule: `${entry.tag}: ${entry.rule}` });
@@ -139,16 +150,22 @@ export function matchCustomer(
       ? 'action_required'
       : 'info';
 
+  const matched_rules = onlyIrrelevant
+    ? [IRRELEVANT_TAG]
+    : matched.map((m) => m.rule);
+
   const summary = relevant
     ? `Berör ${matched.map((m) => m.tag).join(', ')} — ${event.title}`.slice(0, 240)
     : onlyUnknown
       ? `Okänd kategori, kräver granskning — ${event.title}`.slice(0, 240)
-      : `Ej relevant för kundprofil — ${event.title}`.slice(0, 240);
+      : onlyIrrelevant
+        ? `Berör inte aktiebolag — ${event.title}`.slice(0, 240)
+        : `Ej relevant för kundprofil — ${event.title}`.slice(0, 240);
 
   return {
     relevant,
     severity,
-    matched_rules: matched.map((m) => m.rule),
+    matched_rules,
     summary,
   };
 }
