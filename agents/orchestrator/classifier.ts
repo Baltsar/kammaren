@@ -1,18 +1,14 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type Anthropic from '@anthropic-ai/sdk';
 import { list, read } from '../watcher/customer-profile/store.js';
 import type { CustomerProfile } from '../watcher/customer-profile/types.js';
 import { loadExistingIds } from '../watcher/poller/dedupe.js';
 import type { WatcherEvent } from '../watcher/schema/event.js';
+import type { LlmClient } from './llm/client.js';
 import { matchCustomer } from './rules/customer-matcher.js';
 import { tagEvent } from './rules/event-tagger.js';
-import {
-  estimateLlmCostUsd,
-  tagWithLlm,
-  type LlmUsage,
-} from './rules/llm-tagger.js';
+import { tagWithLlm } from './rules/llm-tagger.js';
 import type { Tag } from './rules/categories.js';
 import {
   type Classification,
@@ -37,8 +33,7 @@ export type RunClassifierResult = {
   by_severity: { info: number; warning: number; action_required: number };
   by_method: { deterministic: number; llm: number; 'llm-okand': number };
   llm_calls: number;
-  llm_usage: LlmUsage;
-  llm_cost_usd: number;
+  llm_cost_eur: number;
 };
 
 export type RunClassifierOptions = {
@@ -46,8 +41,8 @@ export type RunClassifierOptions = {
   outputPath?: string;
   vaultDir?: string;
   now?: () => Date;
-  /** Inject Anthropic-klient (för tests). Default: lazy från ANTHROPIC_API_KEY. */
-  llmClient?: Anthropic;
+  /** Inject LlmClient (för tests). Default: makeLlmClient() från env. */
+  llmClient?: LlmClient;
   /** Stäng av LLM-fallback helt (för tests / kostnadskontroll). */
   disableLlm?: boolean;
 };
@@ -66,13 +61,7 @@ function emptyResult(): RunClassifierResult {
     by_severity: { info: 0, warning: 0, action_required: 0 },
     by_method: { deterministic: 0, llm: 0, 'llm-okand': 0 },
     llm_calls: 0,
-    llm_usage: {
-      input_tokens: 0,
-      output_tokens: 0,
-      cache_creation_input_tokens: 0,
-      cache_read_input_tokens: 0,
-    },
-    llm_cost_usd: 0,
+    llm_cost_eur: 0,
   };
 }
 
@@ -162,11 +151,7 @@ export async function runClassifier(
     } else {
       const llmResult = await tagWithLlm(event, options.llmClient);
       result.llm_calls += 1;
-      result.llm_usage.input_tokens += llmResult.usage.input_tokens;
-      result.llm_usage.output_tokens += llmResult.usage.output_tokens;
-      result.llm_usage.cache_creation_input_tokens +=
-        llmResult.usage.cache_creation_input_tokens;
-      result.llm_usage.cache_read_input_tokens += llmResult.usage.cache_read_input_tokens;
+      result.llm_cost_eur += llmResult.cost_eur;
 
       tagging = { tags: llmResult.tags, method: llmResult.outcome };
     }
@@ -248,15 +233,11 @@ export async function runClassifier(
   }
 
   result.skipped = result.skipped_existing + result.skipped_broken_profile;
-  result.llm_cost_usd = estimateLlmCostUsd(result.llm_usage);
 
   if (result.llm_calls > 0) {
     console.log(
       `[classifier] LLM-fallback: ${result.llm_calls} anrop, ` +
-        `cost ~$${result.llm_cost_usd.toFixed(4)} ` +
-        `(in=${result.llm_usage.input_tokens}, out=${result.llm_usage.output_tokens}, ` +
-        `cache_read=${result.llm_usage.cache_read_input_tokens}, ` +
-        `cache_write=${result.llm_usage.cache_creation_input_tokens})`,
+        `cost ~€${result.llm_cost_eur.toFixed(4)}`,
     );
   }
 

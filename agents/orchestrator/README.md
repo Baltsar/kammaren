@@ -7,9 +7,10 @@ per körning. Entry point: `pipeline.ts`.
 
 ## Status
 
-Watcher (Fas 1), **classifier deterministisk v1** (Fas 2 första steget) och
-**delivery via Telegram** är implementerade. LLM-fallback för okända events
-är reserverad för en uppföljnings-PR.
+Watcher (Fas 1), **classifier deterministisk v1 + LLM-fallback** (Fas 2
+första steget) och **delivery via Telegram** är implementerade. LLM-fallback
+körs på Berget AI (EU-hosted Mistral-Small) som default; Anthropic finns kvar
+som framtida fallback.
 
 ## Hur man kör
 
@@ -162,17 +163,55 @@ egen escape (endast `(`, `)`, `\\`).
 secret. Klienten byggs lazy — körningar utan severity-träffar öppnar
 ingen koppling till Telegram alls.
 
+## LLM-fallback — provider-switching
+
+```
+agents/orchestrator/
+  llm/
+    client.ts                # LlmClient interface + makeLlmClient() factory
+    parse-tags.ts            # hallucination-guard delad mellan providers
+    berget-client.ts         # EU-hosted Mistral via OpenAI-kompatibel API (default)
+    anthropic-client.ts      # Haiku 4.5 — kvar för framtida fallback
+  rules/
+    llm-tagger.ts            # tunn shim: tagWithLlm(event, client?) → LlmTaggerResult
+```
+
+**Scope.** LLM anropas bara för events där `event-tagger.tagEvent()` returnerar
+exakt `['okand']` (deterministisk fallback först). Resultat cachas per `event.id`
+över alla kunder så samma event aldrig anropas mer än en gång per körning.
+
+**Provider-switch via env.**
+
+```bash
+LLM_PROVIDER=berget    # default — EU-hosted Mistral-Small-3.2-24B (~€0.30/M tokens)
+LLM_PROVIDER=anthropic # Haiku 4.5 (~$1/M in, $5/M out USD; konverteras till EUR i loggning)
+```
+
+`makeLlmClient(opts)` läser i prioritetsordning: `opts.provider` →
+`process.env.LLM_PROVIDER` → `'berget'`. Båda providers returnerar samma
+`LlmTagResult`-shape: `{ tags, outcome, cost_eur, provider, model }`.
+
+**Cost-rapportering.** Alltid i EUR. Anthropic-clienten gör USD→EUR-konvertering
+internt (`USD_TO_EUR = 0.92`, uppdatera vid behov). `RunClassifierResult.llm_cost_eur`
+aggregerar över alla anrop i en körning.
+
+**Krasch-säkerhet.** API-fel, timeout, malformed JSON, saknad API-nyckel eller
+hallucinerade kategorier → `{ tags: ['okand'], outcome: 'llm-okand', cost_eur: 0 }`.
+Pipeline fortsätter. Hallucination-guarden (`parse-tags.ts`) filtrerar mot
+`ALL_CATEGORIES + okand` även när Berget kör med strict JSON schema.
+
+**Secrets.** `BERGET_API_KEY` (default), `ANTHROPIC_API_KEY` (om provider=anthropic).
+Båda finns i `.env.example`. CI har bägge mappade i `watcher-daily.yml`.
+
 ## Vad nästa PR fyller i
 
-1. **LLM-fallback** för events där alla tags är `okand` (just nu räknas de
-   under `unknown_only` i resultatet — se loggraden i konsolen).
-2. **Fler keywords** per kategori; kör mot 30 dagars events.jsonl och se
+1. **Fler keywords** per kategori; kör mot 30 dagars events.jsonl och se
    vilka som missas.
-3. **`severity: 'warning'`** för deadline-events nära ikraftträdande
+2. **`severity: 'warning'`** för deadline-events nära ikraftträdande
    (kräver datum-extraktion ur `raw.summary`).
-4. **Per-kund severity-konfig** — vissa kunder vill kanske ha `info`
+3. **Per-kund severity-konfig** — vissa kunder vill kanske ha `info`
    också, andra bara `action_required`. Idag hårdkodas filtret.
-5. **Fler kanaler** (e-post via SMTP, eventuellt Slack). `Delivery.channel`
+4. **Fler kanaler** (e-post via SMTP, eventuellt Slack). `Delivery.channel`
    är förberett — `makeDeliveryId(classification_id, channel)` ger
    icke-kolliderande dedupe per kanal.
 

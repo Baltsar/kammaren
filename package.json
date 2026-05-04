@@ -47,6 +47,7 @@
     "fast-xml-parser": "^5.7.2",
     "grammy": "^1.41.1",
     "iconv-lite": "^0.7.2",
+    "openai": "^6.35.0",
     "ora": "^8.2.0"
   }
 }

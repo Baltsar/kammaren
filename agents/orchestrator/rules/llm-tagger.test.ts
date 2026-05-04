@@ -1,13 +1,17 @@
-import type Anthropic from '@anthropic-ai/sdk';
+/**
+ * Tester för rules/llm-tagger.ts — den tunna shimmen ovanpå LlmClient.
+ *
+ * Provider-specifika tester ligger i ../llm/anthropic-client.test.ts och
+ * ../llm/berget-client.test.ts. Här testar vi bara att shimmen delegerar
+ * korrekt och att default-clienten lazy-konstrueras via env.
+ */
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { WatcherEvent } from '../../watcher/schema/event.js';
-import {
-  __resetDefaultClientForTests,
-  estimateLlmCostUsd,
-  tagWithLlm,
-} from './llm-tagger.js';
+import type { LlmClient, LlmTagResult } from '../llm/client.js';
+import { __resetDefaultClientForTests, tagWithLlm } from './llm-tagger.js';
 
-function makeEvent(title: string, summary = ''): WatcherEvent {
+function makeEvent(title: string): WatcherEvent {
   return {
     id: 'evt-' + Buffer.from(title).toString('hex').slice(0, 8),
     source: 'riksdagen',
@@ -15,263 +19,83 @@ function makeEvent(title: string, summary = ''): WatcherEvent {
     title,
     url: 'https://example.test/sfs',
     published_at: '2026-05-01T00:00:00.000Z',
-    raw: { summary },
+    raw: { summary: '' },
     fetched_at: '2026-05-01T00:00:00.000Z',
   };
 }
 
-type MockResponse = {
-  text: string;
-  input_tokens?: number;
-  output_tokens?: number;
-  cache_creation_input_tokens?: number;
-  cache_read_input_tokens?: number;
-};
-
-function makeMockClient(
-  response: MockResponse | (() => MockResponse | Promise<MockResponse>) | Error,
-): { client: Anthropic; create: ReturnType<typeof vi.fn> } {
-  const create = vi.fn(async () => {
-    if (response instanceof Error) throw response;
-    const r = typeof response === 'function' ? await response() : response;
-    return {
-      id: 'msg_test',
-      type: 'message',
-      role: 'assistant',
-      model: 'claude-haiku-4-5',
-      content: [{ type: 'text', text: r.text }],
-      stop_reason: 'end_turn',
-      stop_sequence: null,
-      usage: {
-        input_tokens: r.input_tokens ?? 100,
-        output_tokens: r.output_tokens ?? 10,
-        cache_creation_input_tokens: r.cache_creation_input_tokens ?? 0,
-        cache_read_input_tokens: r.cache_read_input_tokens ?? 0,
-      },
-    };
-  });
-
-  const client = { messages: { create } } as unknown as Anthropic;
-  return { client, create };
+function makeMockClient(result: LlmTagResult): {
+  client: LlmClient;
+  tagEvent: ReturnType<typeof vi.fn>;
+} {
+  const tagEvent = vi.fn(async () => result);
+  return { client: { tagEvent }, tagEvent };
 }
 
-describe('tagWithLlm', () => {
+describe('tagWithLlm shim', () => {
   afterEach(() => {
     __resetDefaultClientForTests();
     vi.restoreAllMocks();
   });
 
-  it('returnerar parsed tags och method=llm för giltiga kategorier', async () => {
-    const { client, create } = makeMockClient({ text: '["bolagsskatt"]' });
-    const event = makeEvent('Inkomstskattelag (2026:1234)', 'Ändringar i bolagsskatt.');
+  it('delegerar till injicerad LlmClient och returnerar mappad shape', async () => {
+    const { client, tagEvent } = makeMockClient({
+      tags: ['bolagsskatt'],
+      outcome: 'llm',
+      cost_eur: 0.0001,
+      provider: 'berget',
+      model: 'mistralai/Mistral-Small-3.2-24B-Instruct-2506',
+    });
+    const event = makeEvent('Inkomstskattelag (2026:1)');
 
     const result = await tagWithLlm(event, client);
 
+    expect(tagEvent).toHaveBeenCalledOnce();
+    expect(tagEvent).toHaveBeenCalledWith(event);
     expect(result.tags).toEqual(['bolagsskatt']);
     expect(result.outcome).toBe('llm');
-    expect(create).toHaveBeenCalledOnce();
+    expect(result.cost_eur).toBe(0.0001);
+    expect(result.provider).toBe('berget');
+    expect(result.model).toBe('mistralai/Mistral-Small-3.2-24B-Instruct-2506');
   });
 
-  it('hanterar flera kategorier', async () => {
-    const { client } = makeMockClient({ text: '["moms", "anstallning"]' });
-    const event = makeEvent('Lag om moms och anställning');
-
-    const result = await tagWithLlm(event, client);
-
-    expect(result.tags.sort()).toEqual(['anstallning', 'moms']);
-    expect(result.outcome).toBe('llm');
-  });
-
-  it('returnerar llm-okand när LLM svarar ["okand"]', async () => {
-    const { client } = makeMockClient({ text: '["okand"]' });
-    const event = makeEvent('Något obegripligt');
-
-    const result = await tagWithLlm(event, client);
-
-    expect(result.tags).toEqual(['okand']);
-    expect(result.outcome).toBe('llm-okand');
-  });
-
-  it('filtrerar bort hallucinerade kategorier och loggar warning', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  it('delegerar llm-okand-resultat oförändrat', async () => {
     const { client } = makeMockClient({
-      text: '["bolagsskatt", "skatteflykt", "moms"]',
+      tags: ['okand'],
+      outcome: 'llm-okand',
+      cost_eur: 0,
+      provider: 'anthropic',
+      model: 'claude-haiku-4-5',
     });
-    const event = makeEvent('Test');
 
-    const result = await tagWithLlm(event, client);
-
-    expect(result.tags.sort()).toEqual(['bolagsskatt', 'moms']);
-    expect(result.outcome).toBe('llm');
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('hallucinated category: skatteflykt'),
-    );
-  });
-
-  it('returnerar llm-okand vid malformed JSON', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { client } = makeMockClient({ text: 'detta är prosa, inte json' });
-    const event = makeEvent('Test');
-
-    const result = await tagWithLlm(event, client);
+    const result = await tagWithLlm(makeEvent('Något obegripligt'), client);
 
     expect(result.tags).toEqual(['okand']);
     expect(result.outcome).toBe('llm-okand');
-    expect(warnSpy).toHaveBeenCalled();
   });
 
-  it('extraherar JSON-array även om LLM inkluderar prosa runt', async () => {
-    const { client } = makeMockClient({
-      text: 'Här är min klassning: ["gdpr"] som matchar.',
-    });
-    const event = makeEvent('Dataskyddslag');
-
-    const result = await tagWithLlm(event, client);
-
-    expect(result.tags).toEqual(['gdpr']);
-    expect(result.outcome).toBe('llm');
-  });
-
-  it('returnerar llm-okand vid tom array', async () => {
+  it('default-clienten faller tillbaka till okand när varken Berget eller Anthropic key finns', async () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { client } = makeMockClient({ text: '[]' });
-    const event = makeEvent('Test');
-
-    const result = await tagWithLlm(event, client);
-
-    expect(result.tags).toEqual(['okand']);
-    expect(result.outcome).toBe('llm-okand');
-    expect(warnSpy).toHaveBeenCalled();
-  });
-
-  it('faller tillbaka till llm-okand vid SDK-fel (timeout/rate-limit)', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { client } = makeMockClient(new Error('Request timeout'));
-    const event = makeEvent('Test');
-
-    const result = await tagWithLlm(event, client);
-
-    expect(result.tags).toEqual(['okand']);
-    expect(result.outcome).toBe('llm-okand');
-    expect(result.usage).toEqual({
-      input_tokens: 0,
-      output_tokens: 0,
-      cache_creation_input_tokens: 0,
-      cache_read_input_tokens: 0,
-    });
-    expect(warnSpy).toHaveBeenCalledWith(
-      expect.stringContaining('anrop misslyckades'),
-    );
-  });
-
-  it('returnerar llm-okand när ANTHROPIC_API_KEY saknas och ingen klient injiceras', async () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const original = process.env.ANTHROPIC_API_KEY;
+    const originalProvider = process.env.LLM_PROVIDER;
+    const originalBerget = process.env.BERGET_API_KEY;
+    const originalAnthropic = process.env.ANTHROPIC_API_KEY;
+    delete process.env.BERGET_API_KEY;
     delete process.env.ANTHROPIC_API_KEY;
-    __resetDefaultClientForTests();
+    process.env.LLM_PROVIDER = 'berget';
 
     try {
-      const event = makeEvent('Test');
-      const result = await tagWithLlm(event);
-
+      const result = await tagWithLlm(makeEvent('Test'));
       expect(result.tags).toEqual(['okand']);
       expect(result.outcome).toBe('llm-okand');
+      expect(result.cost_eur).toBe(0);
       expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('ANTHROPIC_API_KEY saknas'),
+        expect.stringContaining('BERGET_API_KEY saknas'),
       );
     } finally {
-      if (original !== undefined) process.env.ANTHROPIC_API_KEY = original;
+      if (originalProvider !== undefined) process.env.LLM_PROVIDER = originalProvider;
+      else delete process.env.LLM_PROVIDER;
+      if (originalBerget !== undefined) process.env.BERGET_API_KEY = originalBerget;
+      if (originalAnthropic !== undefined) process.env.ANTHROPIC_API_KEY = originalAnthropic;
     }
-  });
-
-  it('rapporterar usage-tokens korrekt från response', async () => {
-    const { client } = makeMockClient({
-      text: '["bolagsskatt"]',
-      input_tokens: 50,
-      output_tokens: 5,
-      cache_creation_input_tokens: 200,
-      cache_read_input_tokens: 0,
-    });
-    const event = makeEvent('Test');
-
-    const result = await tagWithLlm(event, client);
-
-    expect(result.usage).toEqual({
-      input_tokens: 50,
-      output_tokens: 5,
-      cache_creation_input_tokens: 200,
-      cache_read_input_tokens: 0,
-    });
-  });
-
-  it('skickar prompt med cache_control på system-prompt', async () => {
-    const { client, create } = makeMockClient({ text: '["bolagsskatt"]' });
-    const event = makeEvent('Inkomstskattelag');
-
-    await tagWithLlm(event, client);
-
-    const args = create.mock.calls[0][0];
-    expect(args.model).toBe('claude-haiku-4-5');
-    expect(Array.isArray(args.system)).toBe(true);
-    expect(args.system[0].cache_control).toEqual({ type: 'ephemeral' });
-  });
-
-  it('trunkerar summary till 1500 tecken i user-prompt', async () => {
-    const longSummary = 'a'.repeat(5000);
-    const { client, create } = makeMockClient({ text: '["okand"]' });
-    const event = makeEvent('Test', longSummary);
-
-    await tagWithLlm(event, client);
-
-    const args = create.mock.calls[0][0];
-    const userContent = args.messages[0].content as string;
-    // 1500 'a' + de andra delarna av prompten — summary-delen ska vara cappad
-    expect(userContent).toContain('a'.repeat(1500));
-    expect(userContent).not.toContain('a'.repeat(1501));
-  });
-});
-
-describe('estimateLlmCostUsd', () => {
-  it('beräknar cost mot Haiku 4.5 priser', () => {
-    // 1M input @ $1, 1M output @ $5 → $6
-    const cost = estimateLlmCostUsd({
-      input_tokens: 1_000_000,
-      output_tokens: 1_000_000,
-      cache_creation_input_tokens: 0,
-      cache_read_input_tokens: 0,
-    });
-    expect(cost).toBeCloseTo(6.0, 5);
-  });
-
-  it('cache read kostar 0.1× input', () => {
-    const cost = estimateLlmCostUsd({
-      input_tokens: 0,
-      output_tokens: 0,
-      cache_creation_input_tokens: 0,
-      cache_read_input_tokens: 1_000_000,
-    });
-    expect(cost).toBeCloseTo(0.1, 5);
-  });
-
-  it('cache write kostar 1.25× input', () => {
-    const cost = estimateLlmCostUsd({
-      input_tokens: 0,
-      output_tokens: 0,
-      cache_creation_input_tokens: 1_000_000,
-      cache_read_input_tokens: 0,
-    });
-    expect(cost).toBeCloseTo(1.25, 5);
-  });
-
-  it('typisk 10-event körning landar runt $0.0X', () => {
-    // ~10 anrop × ~250 input + ~15 output, första cachar 200 tokens, övriga läser cache
-    const cost = estimateLlmCostUsd({
-      input_tokens: 500, // små per-event prompts efter första
-      output_tokens: 150,
-      cache_creation_input_tokens: 250,
-      cache_read_input_tokens: 2250, // 9 reads
-    });
-    expect(cost).toBeGreaterThan(0);
-    expect(cost).toBeLessThan(0.01);
   });
 });

@@ -35,7 +35,9 @@ jobs:
 
       - name: Run pipeline
         env:
+          BERGET_API_KEY: ${{ secrets.BERGET_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          LLM_PROVIDER: berget
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
         run: bun run agents/orchestrator/pipeline.ts
 
