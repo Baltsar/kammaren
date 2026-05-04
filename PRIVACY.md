@@ -1,19 +1,29 @@
 # Integritetspolicy — KAMMAREN
 
-**Senast uppdaterad:** 2026-04-18
-**Version:** 1.0
+**Senast uppdaterad:** 2026-05-04
+**Version:** 2.0
 
 ---
 
 ## 1. Personuppgiftsansvarig
 
-- **Operatör:** Gustaf Garnow, privatperson, Sverige
-- **Kontakt:** info@kammaren.nu
-- **Tjänst:** KAMMAREN (`https://kammaren.nu`)
+Gustaf Garnow, kammaren.nu
+Kontakt för GDPR-ärenden: info@kammaren.nu
 
-## 2. Vilka personuppgifter behandlas
+Tjänsten drivs av en fysisk person i näringsverksamhet
+(enskild firma).
 
-KAMMAREN:s syfte är deterministisk skatteberäkning — **ingen användarprofil skapas**. Följande personuppgifter behandlas tekniskt:
+KAMMAREN består av två separata tjänster — **Skatte-engine** och
+**Watcher Cloud**. Behandlingen av personuppgifter skiljer sig mellan
+tjänsterna och beskrivs i separata sektioner nedan. Tillsynsmyndighet
+är Integritetsskyddsmyndigheten (IMY, https://imy.se).
+
+---
+
+## 2. Skatte-engine — vad behandlas
+
+KAMMAREN:s skatte-engine har syftet **deterministisk skatteberäkning** —
+**ingen användarprofil skapas**. Följande personuppgifter behandlas tekniskt:
 
 ### 2.1 IP-adress (vid API-anrop)
 
@@ -33,16 +43,7 @@ KAMMAREN:s syfte är deterministisk skatteberäkning — **ingen användarprofil
 
 - **User-Agent, Origin:** Kan loggas tillfälligt av Vercel för drift. Raderas enligt Vercels retention policy (se vercel.com/legal).
 
-## 3. Vad KAMMAREN INTE gör
-
-- ❌ Inga cookies
-- ❌ Ingen tracking (ingen Google Analytics, Plausible, etc. i API-skiktet)
-- ❌ Ingen profilering
-- ❌ Ingen vidareförsäljning
-- ❌ Ingen automatiserad beslutfattning enligt art. 22 GDPR
-- ❌ Ingen marknadsföring
-
-## 4. Mottagare / personuppgiftsbiträden
+### 2.4 Skatte-engine — mottagare / personuppgiftsbiträden
 
 | Leverantör | Syfte | Region | DPA |
 |-----------|-------|--------|-----|
@@ -50,6 +51,99 @@ KAMMAREN:s syfte är deterministisk skatteberäkning — **ingen användarprofil
 | Upstash Inc. | Rate-limiting (Redis) | EU (Frankfurt) | DPA |
 
 Inga personuppgifter överförs till tredje land utanför EU/EES utöver vad som omfattas av Vercels DPA och Standard Contractual Clauses (SCC) / EU-US Data Privacy Framework.
+
+---
+
+## 3. Watcher Cloud — vad behandlas
+
+Watcher Cloud är en B2B-tjänst som riktas till svenska aktiebolag och deras
+företrädare i näringsverksamhet (se [TERMS.md § 9](./TERMS.md)). Följande
+personuppgifter behandlas:
+
+### 3.1 Kategorier av personuppgifter
+
+| Kategori | Syfte | Källa |
+|---|---|---|
+| Telegram-användar-ID (`telegram_chat_id`) | Leverans av notiser | Användarens `/start`-kommando i Telegram-bot |
+| Organisationsnummer (orgnr) | Identifiering av aktiebolaget | Användarinmatning vid onboarding |
+| Bolagsprofil-flaggor (t.ex. moms-registrerad, arbetsgivar-registrerad) | Klassificering: avgör vilka händelser som är relevanta | Användarinmatning |
+| Bekräftelse-tidsstämplar (`consent_*_at`) | Bevis på samtycke till TERMS, PRIVACY, B2B-positioning | Användarens onboarding-flöde |
+
+### 3.2 Rättslig grund
+
+Samtycke (GDPR artikel 6.1.a). Användaren lämnar samtycke vid registrering
+genom att aktivt bekräfta TERMS, PRIVACY och B2B-positioning. Samtycket
+kan återkallas när som helst utan att det påverkar lagligheten av behandling
+som skett dessförinnan. Återkallelse sker via `info@kammaren.nu` eller via
+Telegram-botens `/glömmig`-kommando.
+
+### 3.3 Automatiserad behandling och profilering
+
+KAMMAREN Watcher använder automatiserad behandling av dina
+profil-uppgifter (bolagstyp, valda bevakningsämnen, geografisk region)
+för att avgöra vilka regulatoriska notiser som är relevanta för dig.
+Denna behandling utgör profilering i enlighet med GDPR artikel 4.4.
+
+Behandlingen innebär INTE automatiserat beslutsfattande enligt
+GDPR artikel 22 — ingen behandling fattar beslut med rättsliga följder
+för dig. Du mottar alltid notiser baserat på din konfiguration och
+kan när som helst ändra dina profil-inställningar.
+
+**Logiken bakom profileringen:** Systemet jämför händelse-taggar
+från myndighetskällor (t.ex. "skatt:moms", "bolag:årsredovisning")
+mot de bevakningsprofiler du har konfigurerat. Matchande taggar
+utlöser en notis. Ingen känslig personuppgift (artikel 9)
+behandlas i profileringssteget.
+
+### 3.4 Lagringstid
+
+- Aktiv kund: så länge samtycke består.
+- Vid återkallelse av samtycke / radering: profil tas bort omedelbart;
+  `telegram_chat_id` raderas. Klassificerings- och leveranshistorik bevaras
+  i append-only-loggar (`classifications.jsonl`, `deliveries.jsonl`)
+  i högst **30 dagar** efter radering för att uppfylla artikel 30-skyldigheten.
+- Efter 30 dagar: alla spår av användaren raderas eller pseudonymiseras.
+
+### 3.5 AI-behandling och underbiträden
+
+KAMMAREN Watcher använder följande AI-leverantörer för behandling
+av data:
+
+| Leverantör | Funktion | Dataplacering | DPA | Överföringsmekanism |
+|---|---|---|---|---|
+| Berget AI (Berget Cloud AB) | Klassificering av regulatoriska händelser (95 % av LLM-anrop) | Sverige (Stockholm) | [berget.ai/dpa](https://berget.ai/dpa) | EU-intern, ej tillämpligt |
+| Anthropic PBC | Fallback-klassificering | USA (AWS/GCP) | Ingår i Commercial API Terms | SCC (GDPR art. 46.2.c) |
+
+Inga personuppgifter om slutanvändare (Telegram-ID, bolagsdata)
+skickas till AI-leverantörerna. API-anrop innehåller enbart
+offentlig myndighetsinformation (lagtext, nyhetsflöden).
+AI-leverantörerna agerar därför som **underbiträden** enbart
+avseende eventuell teknisk loggning, inte avseende behandling
+av slutanvändardata.
+
+### 3.6 Watcher Cloud — mottagare / personuppgiftsbiträden
+
+| Leverantör | Syfte | Region | DPA |
+|---|---|---|---|
+| Telegram FZ-LLC | Leverans av notiser | EU (Nederländerna) / Förenade Arabemiraten | Telegram Bot Platform Terms |
+| Berget AI (Berget Cloud AB) | LLM-tagging av events | Sverige | [berget.ai/dpa](https://berget.ai/dpa) |
+| Anthropic PBC | Fallback-LLM | USA | Commercial API DPA + SCC |
+| GitHub Inc. | Hosting av källkod och scheduled GitHub Actions | EU/USA | DPA + SCC |
+
+Telegram tar emot innehållet i notisen (myndighetsinformation, ingen
+profil-info) samt mottagarens `chat_id`. Ingen profil-data lämnar
+KAMMAREN:s vault.
+
+---
+
+## 4. Vad KAMMAREN INTE gör
+
+- ❌ Inga cookies (skatte-engine API)
+- ❌ Ingen tracking (ingen Google Analytics, Plausible, etc.)
+- ❌ Ingen automatiserad beslutfattning enligt art. 22 GDPR
+- ❌ Ingen marknadsföring
+- ❌ Ingen vidareförsäljning av personuppgifter
+- ❌ Inga personuppgifter skickas i AI-prompts (varken Skatte-engine eller Watcher)
 
 ## 5. Registrerades rättigheter (GDPR kap. III)
 
@@ -63,21 +157,30 @@ Som registrerad har du rätt att:
 - Begära **dataportabilitet** (art. 20)
 - Lämna klagomål till **Integritetsskyddsmyndigheten** (imy.se)
 
-**Obs:** Då KAMMAREN endast lagrar IP-adress ≤24 h och inte kan identifiera dig utan ytterligare information (t.ex. din ISP:s loggar) är vissa rättigheter i praktiken begränsade. Kontakta oss via info@kammaren.nu för frågor.
+**Watcher Cloud:** Begäran om tillgång eller radering hanteras via
+GDPR-CLI eller via `info@kammaren.nu`. Tjänsteleverantören tillhandahåller
+en JSON-export inom 30 dagar (`bun run gdpr export <orgnr>`) och
+genomför radering inom 7 dagar (`bun run gdpr delete <orgnr>`).
+
+**Skatte-engine:** Då tjänsten endast lagrar IP-adress ≤24 h och inte kan
+identifiera dig utan ytterligare information (t.ex. din ISP:s loggar) är
+vissa rättigheter i praktiken begränsade.
+
+Kontakta oss via `info@kammaren.nu` för frågor.
 
 ## 6. Registerförteckning (art. 30 GDPR)
 
-KAMMAREN för en registerförteckning enligt art. 30:
-
-| Behandling | Ändamål | Rättslig grund | Kategorier | Mottagare | Lagringstid |
-|-----------|---------|----------------|------------|-----------|-------------|
-| Rate-limiting | Missbruksskydd | Art. 6.1.f | IP-adress | Upstash (EU) | ≤24 h |
-| API-drift | Tjänsteleverans | Art. 6.1.f | Request-metadata | Vercel | Enligt Vercel |
+KAMMAREN för en registerförteckning enligt art. 30 GDPR. Se
+[agents/orchestrator/legal/treatment-register.md](./agents/orchestrator/legal/treatment-register.md)
+för detaljerna.
 
 ## 7. Säkerhet
 
 - HTTPS/TLS obligatoriskt (inga HTTP-anrop).
-- Inga personuppgifter persisteras i KAMMAREN:s egen databas (ingen sådan finns).
+- Inga personuppgifter persisteras i KAMMAREN:s skatte-engine-databas (ingen sådan finns).
+- Watcher Cloud: profil-vault sparas pseudonymiserat per orgnr i versionerade
+  filer; `telegram_chat_id` är den enda direkt identifierande uppgiften och
+  raderas omedelbart vid återkallelse av samtycke.
 - Upstash Redis är krypterad at rest.
 
 ## 8. Cookies

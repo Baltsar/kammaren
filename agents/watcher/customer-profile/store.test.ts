@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { exists, list, patch, read, remove, upsert } from './store.js';
 import type { CustomerProfile } from './types.js';
-import { SCHEMA_VERSION } from './types.js';
+import { SCHEMA_VERSION, hasFullConsent } from './types.js';
 
 const ORG = '559123-4567';
 const ORG_2 = '556677-8899';
@@ -179,6 +179,81 @@ describe('customer-profile store', () => {
       const written = await upsert(ORG, profile, opts);
       const readBack = await read(ORG, opts);
       expect(readBack).toEqual(written);
+    });
+  });
+
+  describe('consent flags (legal-foundation)', () => {
+    it('persisterar alla tre consent-tidsstämplar via upsert', async () => {
+      const ts = '2026-05-04T12:00:00.000Z';
+      const profile = makeProfile(ORG);
+      profile.consent_terms_accepted_at = ts;
+      profile.consent_privacy_accepted_at = ts;
+      profile.consent_b2b_acknowledged_at = ts;
+
+      await upsert(ORG, profile, opts);
+      const stored = await read(ORG, opts);
+
+      expect(stored?.consent_terms_accepted_at).toBe(ts);
+      expect(stored?.consent_privacy_accepted_at).toBe(ts);
+      expect(stored?.consent_b2b_acknowledged_at).toBe(ts);
+    });
+
+    it('uppdaterar enbart valda consent-fält via patch', async () => {
+      const ts = '2026-05-04T12:00:00.000Z';
+      await upsert(ORG, makeProfile(ORG), opts);
+      await patch(ORG, { consent_terms_accepted_at: ts }, opts);
+
+      const stored = await read(ORG, opts);
+      expect(stored?.consent_terms_accepted_at).toBe(ts);
+      expect(stored?.consent_privacy_accepted_at).toBeUndefined();
+      expect(stored?.consent_b2b_acknowledged_at).toBeUndefined();
+    });
+
+    it('hasFullConsent returnerar true endast när alla tre är satta', () => {
+      const ts = '2026-05-04T12:00:00.000Z';
+      const base = makeProfile(ORG);
+
+      expect(hasFullConsent(base)).toBe(false);
+      expect(
+        hasFullConsent({ ...base, consent_terms_accepted_at: ts }),
+      ).toBe(false);
+      expect(
+        hasFullConsent({
+          ...base,
+          consent_terms_accepted_at: ts,
+          consent_privacy_accepted_at: ts,
+        }),
+      ).toBe(false);
+      expect(
+        hasFullConsent({
+          ...base,
+          consent_terms_accepted_at: ts,
+          consent_privacy_accepted_at: ts,
+          consent_b2b_acknowledged_at: ts,
+        }),
+      ).toBe(true);
+    });
+
+    it('hasFullConsent returnerar false om någon flagga är tom sträng eller null', () => {
+      const ts = '2026-05-04T12:00:00.000Z';
+      const base = makeProfile(ORG);
+
+      expect(
+        hasFullConsent({
+          ...base,
+          consent_terms_accepted_at: ts,
+          consent_privacy_accepted_at: '',
+          consent_b2b_acknowledged_at: ts,
+        }),
+      ).toBe(false);
+      expect(
+        hasFullConsent({
+          ...base,
+          consent_terms_accepted_at: ts,
+          consent_privacy_accepted_at: null,
+          consent_b2b_acknowledged_at: ts,
+        }),
+      ).toBe(false);
     });
   });
 });
