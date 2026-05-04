@@ -42,6 +42,12 @@ export type CustomerProfile = {
   gdpr_profile: Record<string, unknown>;
   workplace_safety_profile: Record<string, unknown>;
   cyber_nis2_profile: Record<string, unknown>;
+  // Telegram-mottagare för leveranser. null/undefined = mottagaren har
+  // inte bundit sin bot ännu, leverans hoppas över. Hanteras top-level
+  // tills vi har fler kanaler (e-post, SMS) — då bryter vi ut.
+  // Optional för bakåtkompat med befintliga profil-filer som saknar
+  // fältet; delivery-pipen behandlar undefined och null lika.
+  telegram_chat_id?: string | null;
   meta: ProfileMeta;
 };
 
@@ -55,6 +61,7 @@ export type CustomerProfilePatch = {
   gdpr_profile?: Record<string, unknown>;
   workplace_safety_profile?: Record<string, unknown>;
   cyber_nis2_profile?: Record<string, unknown>;
+  telegram_chat_id?: string | null;
   meta?: Partial<ProfileMeta>;
 };
 
