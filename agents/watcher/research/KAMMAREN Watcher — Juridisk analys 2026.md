@@ -74,14 +74,6 @@ utsträckning detta är tillåtet enligt tvingande konsumentskyddslagstiftning.
 - Wint TOS: [wint.se/faq](https://www.wint.se/faq), [Wint Integritetspolicy](https://www.wint.se/info/integritetspolicy)
 - Korling, Fredric: *Rådgivningsansvar* — "Råd är information men inte all information är rådgivning"[^2]
 
-### Advokat-prep (Område 1)
-
-1. Klassificeras regulatoriska deklarationsfrister som "skatterådgivning" under svensk rätt om jag proaktivt skickar dem?
-2. Räcker en TOS-friskrivning för att utesluta lag (2003:862):s tillämpning, eller behöver jag aktivt dokumentera att ingen uppdragsrelation uppstår?
-3. Vilken konkret formulering minimerar risken att marknadsföringslagen (2008:486) § 10 om vilseledande påståenden aktiveras vid felklassificerade AI-notiser?
-4. Hur hanterar jag en situation där en testanvändare hävdar att en notis var vilseledande — vilken process bör jag ha på plats?
-5. Är det tillräckligt att hänvisa till Skatteverkets käll-URL i varje notis för att uppfylla informationskravet?
-
 ***
 
 ## Område 2 — GDPR-compliance för automatiserad behandling
@@ -147,14 +139,6 @@ regulatoriska notiser. Svara JA för att godkänna och starta.
 - IMY: [Tillsyns- och vägledningsprioriteringar 2025/2026](https://www.imy.se/publikationer/tillsyns--och-vagledningsprioriteringar-2025/)
 - IMY: [Samtycke som rättslig grund](https://www.imy.se/verksamhet/dataskydd/det-har-galler-enligt-gdpr/rattslig-grund/samtycke/)
 - GDPR art 22 (svenska): [gdpr-text.com](https://gdpr-text.com/sv/read/article-22/)
-
-### Advokat-prep (Område 2)
-
-1. Kvalificeras min Telegram-baserade onboarding som "uttryckligt samtycke" för profilering enligt artikel 22.2.c, och räcker ett "JA"-svar i en bot?
-2. Måste jag genomföra en DPIA (Data Protection Impact Assessment, artikel 35) givet att profileringen kombinerar bolagsuppgifter och kommunikationsmönster?
-3. Räcker det med att beskriva profileringslogiken i integritetspolicyn, eller krävs en separat teknisk dokumentation av algoritmen?
-4. Om jag senare implementerar ML-baserad relevansrankning — när passerar det gränsen till artikel 22?
-5. Vilka minimikrav ställer IMY på behandlingsregistret (artikel 30) för en enskild firma med <10 användare?
 
 ***
 
@@ -230,14 +214,6 @@ för att möjliggöra GDPR artikel 33-notifiering till IMY inom 72 timmar.
 - Satori: [GDPR och Claude](https://www.satoriml.se/blog/gdpr-claude-guide-svenska-foretag)
 - Bokio: [Dataskydd och villkor](https://www.bokio.se/villkor-och-gdpr/)
 
-### Advokat-prep (Område 3)
-
-1. Kan jag hävda att Berget AI:s API-anrop (utan personuppgifter i promptarna) överhuvudtaget kräver ett DPA, eller faller det utanför GDPR:s tillämpningsområde?
-2. Räcker Anthropics inbyggda SCC för att uppfylla kraven enligt EU:s Schrems II-rättspraxis, eller behöver jag göra ett eget Transfer Impact Assessment (TIA)?
-3. Om jag i framtiden inkluderar bolagsuppgifter i AI-promptar — vilka specifika ändringar i DPA och integritetspolicy krävs då?
-4. Är DSA:s "intermediary service"-definition tillämplig på en Telegram-bot som vidarebefordrar myndighetsinformation?
-5. Vilket register (artikel 30) måste upprättas, och vilken form räcker för en enskild firma under 250 anställda?
-
 ***
 
 ## Område 4 — Personligt ansvar pre-bolagsbildning
@@ -310,14 +286,6 @@ en sådan begränsning.
 - NJA 2003 s. 390 (ren förmögenhetsskada + brott): [lagen.nu](https://lagen.nu/dom/nja/2003s390)
 - Contus: [Enskild näringsverksamhet — personligt ansvar](https://contus-accounting.se/sv/starta-foretag/enskild-naringsverksamhet/)
 - Bolagsverket: [Krav på enskild näringsidkare](https://bolagsverket.se/foretag/enskildnaringsverksamhet/startaenskildnaringsverksamhet/kravpaenskildnaringsidkare.823.html)
-
-### Advokat-prep (Område 4)
-
-1. Kan en TOS-friskrivningsklausul för ren förmögenhetsskada stå sig i en konsumentrelation (aktiebolagsägare som privatperson) mot konsumentköplagens tvingande regler?
-2. Utgör TOS-acceptans via Telegram-bot ("svara JA") ett bindande avtal enligt avtalslagen — och vilka formkrav gäller?
-3. Hur snabbt kan jag bilda ett aktiebolag och retroaktivt "överlåta" tjänsten till det — är historiska TOS-avtal med enskild firma ett problem?
-4. Behöver jag en ansvarsförsäkring (professional liability) som enskild firma under testfasen, och vad täcker den typiskt?
-5. Räcker ett enda-personers-AB med 25 000 SEK aktiekapital som verksamhet, eller bör jag ha mer kapital för trovärdigheten mot framtida användare?
 
 ***
 
@@ -432,14 +400,6 @@ Använd källkoden på eget ansvar.
 - Plausible DPA: [plausible.io/dpa](https://plausible.io/dpa)
 - Wikipedia AGPL: [GNU Affero General Public License](https://en.wikipedia.org/wiki/GNU_Affero_General_Public_License)
 - Cloudron forum (AGPL hosted service): [AGPLv3 + commercial hosting](https://forum.cloudron.io/topic/10896/license-warning)
-
-### Advokat-prep (Område 5)
-
-1. Räcker AGPL-3.0 boilerplate i LICENSE-filen, eller behöver jag komplettera med ett "Contributor License Agreement" (CLA) för att behålla möjligheten att relicensiera koden i framtiden?
-2. Om jag i framtiden vill erbjuda en proprietär enterprise-version — hur lägger jag en dual-licensing-struktur (AGPL + kommersiell licens) och vad kräver det av nuvarande AGPL-bidragsgivare?
-3. Kan Anthropic hävda ägarskap till AI-genererade kodsegment, och hur påverkar det AGPL-distributionsskyldigheten?
-4. Är det tillräckligt att länka till GitHub-repot från Telegram-boten, eller behöver länken finnas i varje enskilt meddelande (AGPL § 13-kravet)?
-5. Vilka minimikrav ställer konsumentköplagen (2022) § 20–22 på information om uppdateringar för kontinuerliga digitala tjänster?
 
 ***
 
