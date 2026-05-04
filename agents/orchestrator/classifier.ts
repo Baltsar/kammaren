@@ -1,13 +1,24 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type Anthropic from '@anthropic-ai/sdk';
 import { list, read } from '../watcher/customer-profile/store.js';
 import type { CustomerProfile } from '../watcher/customer-profile/types.js';
 import { loadExistingIds } from '../watcher/poller/dedupe.js';
 import type { WatcherEvent } from '../watcher/schema/event.js';
 import { matchCustomer } from './rules/customer-matcher.js';
 import { tagEvent } from './rules/event-tagger.js';
-import { type Classification, makeClassificationId } from './schema/classification.js';
+import {
+  estimateLlmCostUsd,
+  tagWithLlm,
+  type LlmUsage,
+} from './rules/llm-tagger.js';
+import type { Tag } from './rules/categories.js';
+import {
+  type Classification,
+  type ClassificationMethod,
+  makeClassificationId,
+} from './schema/classification.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const EVENTS_PATH = path.resolve(here, '..', 'watcher', 'data', 'events.jsonl');
@@ -24,6 +35,10 @@ export type RunClassifierResult = {
   events_loaded: number;
   customers_loaded: number;
   by_severity: { info: number; warning: number; action_required: number };
+  by_method: { deterministic: number; llm: number; 'llm-okand': number };
+  llm_calls: number;
+  llm_usage: LlmUsage;
+  llm_cost_usd: number;
 };
 
 export type RunClassifierOptions = {
@@ -31,6 +46,10 @@ export type RunClassifierOptions = {
   outputPath?: string;
   vaultDir?: string;
   now?: () => Date;
+  /** Inject Anthropic-klient (för tests). Default: lazy från ANTHROPIC_API_KEY. */
+  llmClient?: Anthropic;
+  /** Stäng av LLM-fallback helt (för tests / kostnadskontroll). */
+  disableLlm?: boolean;
 };
 
 function emptyResult(): RunClassifierResult {
@@ -45,6 +64,15 @@ function emptyResult(): RunClassifierResult {
     events_loaded: 0,
     customers_loaded: 0,
     by_severity: { info: 0, warning: 0, action_required: 0 },
+    by_method: { deterministic: 0, llm: 0, 'llm-okand': 0 },
+    llm_calls: 0,
+    llm_usage: {
+      input_tokens: 0,
+      output_tokens: 0,
+      cache_creation_input_tokens: 0,
+      cache_read_input_tokens: 0,
+    },
+    llm_cost_usd: 0,
   };
 }
 
@@ -96,6 +124,11 @@ function getOrgnr(profile: CustomerProfile): string | null {
   return typeof orgnr === 'string' ? orgnr : null;
 }
 
+type EventTagging = {
+  tags: Tag[];
+  method: ClassificationMethod;
+};
+
 export async function runClassifier(
   options: RunClassifierOptions = {},
 ): Promise<RunClassifierResult> {
@@ -114,11 +147,52 @@ export async function runClassifier(
   result.customers_loaded = customerLoad.customers.length;
   result.skipped_broken_profile += customerLoad.broken;
 
+  const eventTaggingCache = new Map<string, EventTagging>();
+
+  async function getEventTagging(event: WatcherEvent): Promise<EventTagging> {
+    const cached = eventTaggingCache.get(event.id);
+    if (cached) return cached;
+
+    const keywordTags = tagEvent(event);
+    const onlyUnknown = keywordTags.length === 1 && keywordTags[0] === 'okand';
+
+    let tagging: EventTagging;
+    if (!onlyUnknown || options.disableLlm) {
+      tagging = { tags: keywordTags, method: 'deterministic' };
+    } else {
+      const llmResult = await tagWithLlm(event, options.llmClient);
+      result.llm_calls += 1;
+      result.llm_usage.input_tokens += llmResult.usage.input_tokens;
+      result.llm_usage.output_tokens += llmResult.usage.output_tokens;
+      result.llm_usage.cache_creation_input_tokens +=
+        llmResult.usage.cache_creation_input_tokens;
+      result.llm_usage.cache_read_input_tokens += llmResult.usage.cache_read_input_tokens;
+
+      tagging = { tags: llmResult.tags, method: llmResult.outcome };
+    }
+
+    eventTaggingCache.set(event.id, tagging);
+    return tagging;
+  }
+
   const lines: string[] = [];
 
   for (const event of events) {
-    const tags = tagEvent(event);
-    const onlyUnknown = tags.length === 1 && tags[0] === 'okand';
+    // Pre-filter: skip if all (event, customer) pairs already classified.
+    const allCustomersDone = customerLoad.customers.every((profile) => {
+      const orgnr = getOrgnr(profile);
+      if (!orgnr) return true;
+      return existing.has(makeClassificationId(event.id, orgnr));
+    });
+
+    if (allCustomersDone && customerLoad.customers.length > 0) {
+      const skippedForEvent = customerLoad.customers.filter((p) => getOrgnr(p)).length;
+      result.skipped_existing += skippedForEvent;
+      continue;
+    }
+
+    const tagging = await getEventTagging(event);
+    const onlyUnknown = tagging.tags.length === 1 && tagging.tags[0] === 'okand';
 
     for (const profile of customerLoad.customers) {
       const orgnr = getOrgnr(profile);
@@ -135,7 +209,7 @@ export async function runClassifier(
 
       let match;
       try {
-        match = matchCustomer(event, tags, profile);
+        match = matchCustomer(event, tagging.tags, profile);
       } catch (err) {
         result.skipped_broken_profile += 1;
         console.error(
@@ -150,11 +224,11 @@ export async function runClassifier(
         customer_orgnr: orgnr,
         relevant: match.relevant,
         severity: match.severity,
-        tags,
+        tags: tagging.tags,
         matched_rules: match.matched_rules,
         summary: match.summary,
         classified_at: now().toISOString(),
-        method: 'deterministic',
+        method: tagging.method,
       };
 
       result.processed += 1;
@@ -162,6 +236,7 @@ export async function runClassifier(
       else result.irrelevant += 1;
       if (onlyUnknown) result.unknown_only += 1;
       result.by_severity[match.severity] += 1;
+      result.by_method[tagging.method] += 1;
 
       existing.add(id);
       lines.push(JSON.stringify(classification));
@@ -173,10 +248,21 @@ export async function runClassifier(
   }
 
   result.skipped = result.skipped_existing + result.skipped_broken_profile;
+  result.llm_cost_usd = estimateLlmCostUsd(result.llm_usage);
+
+  if (result.llm_calls > 0) {
+    console.log(
+      `[classifier] LLM-fallback: ${result.llm_calls} anrop, ` +
+        `cost ~$${result.llm_cost_usd.toFixed(4)} ` +
+        `(in=${result.llm_usage.input_tokens}, out=${result.llm_usage.output_tokens}, ` +
+        `cache_read=${result.llm_usage.cache_read_input_tokens}, ` +
+        `cache_write=${result.llm_usage.cache_creation_input_tokens})`,
+    );
+  }
 
   if (result.unknown_only > 0) {
     console.log(
-      `[classifier] ${result.unknown_only} event×kund-par fick endast 'okand'-tag — kandidater för LLM-fallback`,
+      `[classifier] ${result.unknown_only} event×kund-par fick endast 'okand'-tag efter keyword + LLM`,
     );
   }
 
