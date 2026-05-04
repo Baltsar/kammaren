@@ -40,13 +40,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ -z "$(git status --porcelain agents/watcher/data/events.jsonl)" ]; then
-            echo "No changes in events.jsonl — nothing to commit."
+          TRACKED_FILES="agents/watcher/data/events.jsonl agents/orchestrator/data/classifications.jsonl"
+          if [ -z "$(git status --porcelain $TRACKED_FILES)" ]; then
+            echo "No changes in events.jsonl or classifications.jsonl — nothing to commit."
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           DATE=$(TZ='Europe/Stockholm' date +%Y-%m-%d)
-          git add agents/watcher/data/events.jsonl
+          git add $TRACKED_FILES
           git commit -m "watcher: daily run $DATE"
           git push origin HEAD:${GITHUB_REF#refs/heads/}
