@@ -14,7 +14,7 @@
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["orchestrator/**/*.ts", "src/**/*.ts", "skills/**/*.ts", "constants/**/*.ts", "verify/**/*.ts", "api/**/*.ts"],
+  "include": ["orchestrator/**/*.ts", "src/**/*.ts", "skills/**/*.ts", "constants/**/*.ts", "verify/**/*.ts", "api/**/*.ts", "agents/watcher/**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",
