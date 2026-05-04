@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 
 export type Severity = 'info' | 'warning' | 'action_required';
 
-export type ClassificationMethod = 'deterministic' | 'llm';
+export type ClassificationMethod = 'deterministic' | 'llm' | 'llm-okand';
 
 export type Classification = {
   id: string;
