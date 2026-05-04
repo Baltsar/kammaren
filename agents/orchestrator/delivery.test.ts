@@ -24,7 +24,24 @@ function makeEvent(id: string, title: string): WatcherEvent {
   };
 }
 
-function makeProfile(orgnr: string, chatId: string | null = null): CustomerProfile {
+// Default: alla tre consent-flaggor satta så att befintliga tester
+// fortsätter passera. Tester som vill verifiera "no consent"-skip
+// passar `consent: false` eller satta enskilda flaggor explicit.
+const FULL_CONSENT_TS = '2026-05-04T00:00:00.000Z';
+
+type MakeProfileOpts = {
+  consent?: boolean;
+  consent_terms_accepted_at?: string | null;
+  consent_privacy_accepted_at?: string | null;
+  consent_b2b_acknowledged_at?: string | null;
+};
+
+function makeProfile(
+  orgnr: string,
+  chatId: string | null = null,
+  opts: MakeProfileOpts = {},
+): CustomerProfile {
+  const consentDefault = opts.consent === false ? null : FULL_CONSENT_TS;
   return {
     company_identity: {
       company_registration_number:
@@ -39,6 +56,18 @@ function makeProfile(orgnr: string, chatId: string | null = null): CustomerProfi
     workplace_safety_profile: {},
     cyber_nis2_profile: {},
     telegram_chat_id: chatId,
+    consent_terms_accepted_at:
+      opts.consent_terms_accepted_at !== undefined
+        ? opts.consent_terms_accepted_at
+        : consentDefault,
+    consent_privacy_accepted_at:
+      opts.consent_privacy_accepted_at !== undefined
+        ? opts.consent_privacy_accepted_at
+        : consentDefault,
+    consent_b2b_acknowledged_at:
+      opts.consent_b2b_acknowledged_at !== undefined
+        ? opts.consent_b2b_acknowledged_at
+        : consentDefault,
     meta: { schema_version: SCHEMA_VERSION },
   };
 }
@@ -373,5 +402,126 @@ describe('runDelivery', () => {
     expect(send).toHaveBeenCalledOnce();
     expect(result.sent).toBe(1);
     expect(warn).toHaveBeenCalled();
+  });
+
+  describe('consent gate (legal-foundation)', () => {
+    it('hoppar över när consent_terms_accepted_at saknas + loggar "no consent"', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
+      await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
+      await writeFile(
+        path.join(vaultDir, `${ORG}.json`),
+        JSON.stringify(
+          makeProfile(ORG, '999', { consent_terms_accepted_at: null }),
+        ),
+      );
+
+      const result = await runDelivery({
+        eventsPath,
+        classificationsPath,
+        deliveriesPath,
+        vaultDir,
+        send,
+      });
+
+      expect(send).not.toHaveBeenCalled();
+      expect(result.skipped_no_consent).toBe(1);
+      expect(result.sent).toBe(0);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('no consent'));
+    });
+
+    it('hoppar över när consent_privacy_accepted_at saknas', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
+      await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
+      await writeFile(
+        path.join(vaultDir, `${ORG}.json`),
+        JSON.stringify(
+          makeProfile(ORG, '999', { consent_privacy_accepted_at: null }),
+        ),
+      );
+
+      const result = await runDelivery({
+        eventsPath,
+        classificationsPath,
+        deliveriesPath,
+        vaultDir,
+        send,
+      });
+
+      expect(result.skipped_no_consent).toBe(1);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('no consent'));
+    });
+
+    it('hoppar över när consent_b2b_acknowledged_at saknas', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
+      await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
+      await writeFile(
+        path.join(vaultDir, `${ORG}.json`),
+        JSON.stringify(
+          makeProfile(ORG, '999', { consent_b2b_acknowledged_at: null }),
+        ),
+      );
+
+      const result = await runDelivery({
+        eventsPath,
+        classificationsPath,
+        deliveriesPath,
+        vaultDir,
+        send,
+      });
+
+      expect(result.skipped_no_consent).toBe(1);
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('no consent'));
+    });
+
+    it('en kund utan consent stoppar inte nästa kund med fullt consent', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
+      await writeJsonl(classificationsPath, [
+        makeClassification('e1', ORG, 'action_required'),
+        makeClassification('e1', ORG_2, 'action_required'),
+      ]);
+      await writeFile(
+        path.join(vaultDir, `${ORG}.json`),
+        JSON.stringify(makeProfile(ORG, '111', { consent: false })),
+      );
+      await writeFile(
+        path.join(vaultDir, `${ORG_2}.json`),
+        JSON.stringify(makeProfile(ORG_2, '222')),
+      );
+
+      const result = await runDelivery({
+        eventsPath,
+        classificationsPath,
+        deliveriesPath,
+        vaultDir,
+        send,
+      });
+
+      expect(send).toHaveBeenCalledOnce();
+      expect(send).toHaveBeenCalledWith('222', expect.any(String));
+      expect(result.skipped_no_consent).toBe(1);
+      expect(result.sent).toBe(1);
+    });
+
+    it('skickar normalt när alla tre consent-fält är satta', async () => {
+      await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
+      await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
+      await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+
+      const result = await runDelivery({
+        eventsPath,
+        classificationsPath,
+        deliveriesPath,
+        vaultDir,
+        send,
+      });
+
+      expect(send).toHaveBeenCalledOnce();
+      expect(result.sent).toBe(1);
+      expect(result.skipped_no_consent).toBe(0);
+    });
   });
 });

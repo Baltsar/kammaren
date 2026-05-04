@@ -9,3 +9,4 @@ dist/
 vault/audit.log
 vault/imports/
 vault/execution-results/
+AUDIT/

@@ -16,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { read as readProfile } from '../watcher/customer-profile/store.js';
 import type { CustomerProfile } from '../watcher/customer-profile/types.js';
+import { hasFullConsent } from '../watcher/customer-profile/types.js';
 import { loadExistingIds } from '../watcher/poller/dedupe.js';
 import type { WatcherEvent } from '../watcher/schema/event.js';
 import { formatNotification } from './delivery/format.js';
@@ -49,6 +50,7 @@ export type RunDeliveryResult = {
   skipped_no_chat_id: number;
   skipped_no_customer: number;
   skipped_no_event: number;
+  skipped_no_consent: number;
   errors: number;
 };
 
@@ -61,6 +63,7 @@ function emptyResult(): RunDeliveryResult {
     skipped_no_chat_id: 0,
     skipped_no_customer: 0,
     skipped_no_event: 0,
+    skipped_no_consent: 0,
     errors: 0,
   };
 }
@@ -163,6 +166,14 @@ export async function runDelivery(
         `[delivery] saknad kund-profil för ${classification.customer_orgnr} — hoppar över`,
       );
       result.skipped_no_customer += 1;
+      continue;
+    }
+
+    if (!hasFullConsent(profile)) {
+      console.warn(
+        `[delivery] no consent för ${classification.customer_orgnr} — hoppar över ${classification.id}`,
+      );
+      result.skipped_no_consent += 1;
       continue;
     }
 

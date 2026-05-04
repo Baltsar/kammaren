@@ -16,7 +16,8 @@
     "typecheck": "tsc --noEmit",
     "build": "tsc",
     "bot:telegram": "tsx src/adapters/telegram.ts",
-    "chat": "tsx src/adapters/cli.ts"
+    "chat": "tsx src/adapters/cli.ts",
+    "gdpr": "tsx agents/orchestrator/cli.ts"
   },
   "keywords": [
     "ai",
