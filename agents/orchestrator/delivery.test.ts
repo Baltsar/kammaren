@@ -524,4 +524,45 @@ describe('runDelivery', () => {
       expect(result.skipped_no_consent).toBe(0);
     });
   });
+
+  describe('is_paused gate', () => {
+    it('hoppar över när profil har is_paused: true', async () => {
+      await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
+      await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
+      const paused = makeProfile(ORG, '999');
+      paused.is_paused = true;
+      await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(paused));
+
+      const result = await runDelivery({
+        eventsPath,
+        classificationsPath,
+        deliveriesPath,
+        vaultDir,
+        send,
+      });
+
+      expect(send).not.toHaveBeenCalled();
+      expect(result.sent).toBe(0);
+      expect(result.skipped_paused).toBe(1);
+    });
+
+    it('skickar när is_paused är false eller saknas', async () => {
+      await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
+      await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
+      const active = makeProfile(ORG, '999');
+      active.is_paused = false;
+      await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(active));
+
+      const result = await runDelivery({
+        eventsPath,
+        classificationsPath,
+        deliveriesPath,
+        vaultDir,
+        send,
+      });
+
+      expect(result.sent).toBe(1);
+      expect(result.skipped_paused).toBe(0);
+    });
+  });
 });
