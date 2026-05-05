@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+    --font-display: 'Playfair Display', serif;
+  }
+
+  body {
+    @apply bg-kammaren-bg-cream text-kammaren-strong font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-tight text-kammaren-strong;
+  }
+
+  ::selection {
+    background: #1A1714;
+    color: #F2EDE4;
+  }
+}
+
+@layer components {
+  .label-eyebrow {
+    @apply font-mono text-[0.65rem] font-semibold tracking-[0.2em] uppercase text-kammaren-label;
+  }
+
+  .card-warm {
+    @apply rounded-lg bg-card text-card-foreground border border-border shadow-sm;
+  }
+
+  .input-warm {
+    @apply w-full rounded-md border border-input bg-white/70 px-3 py-2 text-sm
+           placeholder:text-kammaren-label-light focus:outline-none focus:ring-2
+           focus:ring-kammaren-strong focus:border-kammaren-strong transition;
+  }
+}

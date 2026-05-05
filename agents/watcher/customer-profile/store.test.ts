@@ -256,4 +256,44 @@ describe('customer-profile store', () => {
       ).toBe(false);
     });
   });
+
+  describe('schema 1.1.0 → 1.2.0 backwards-compat', () => {
+    it('läser en 1.1.0-profil utan is_paused-fält', async () => {
+      const { writeFile } = await import('node:fs/promises');
+      const legacy = {
+        company_identity: { company_registration_number: ORG },
+        business_activity: {},
+        tax_profile: {},
+        accounting_reporting_profile: {},
+        governance_profile: {},
+        employment_profile: {},
+        gdpr_profile: {},
+        workplace_safety_profile: {},
+        cyber_nis2_profile: {},
+        consent_terms_accepted_at: '2026-05-04T00:00:00.000Z',
+        consent_privacy_accepted_at: '2026-05-04T00:00:00.000Z',
+        consent_b2b_acknowledged_at: '2026-05-04T00:00:00.000Z',
+        meta: { schema_version: '1.1.0' },
+      };
+      await writeFile(
+        join(vaultDir, `${ORG}.json`),
+        `${JSON.stringify(legacy, null, 2)}\n`,
+        'utf8',
+      );
+
+      const stored = await read(ORG, opts);
+      expect(stored?.meta.schema_version).toBe('1.1.0');
+      expect(stored?.is_paused).toBeUndefined();
+      expect(hasFullConsent(stored as CustomerProfile)).toBe(true);
+    });
+
+    it('persisterar is_paused via patch och bumpar last_updated', async () => {
+      await upsert(ORG, makeProfile(ORG), opts);
+      const paused = await patch(ORG, { is_paused: true }, opts);
+      expect(paused.is_paused).toBe(true);
+
+      const resumed = await patch(ORG, { is_paused: false }, opts);
+      expect(resumed.is_paused).toBe(false);
+    });
+  });
 });

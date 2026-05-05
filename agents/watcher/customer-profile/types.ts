@@ -59,6 +59,9 @@ export type CustomerProfile = {
   consent_terms_accepted_at?: string | null;
   consent_privacy_accepted_at?: string | null;
   consent_b2b_acknowledged_at?: string | null;
+  // Notis-paus styrd av användaren via /pause-kommandot. true = pausad,
+  // false/undefined = aktiv. Optional för bakåtkompat med 1.1.0-filer.
+  is_paused?: boolean;
   meta: ProfileMeta;
 };
 
@@ -76,6 +79,7 @@ export type CustomerProfilePatch = {
   consent_terms_accepted_at?: string | null;
   consent_privacy_accepted_at?: string | null;
   consent_b2b_acknowledged_at?: string | null;
+  is_paused?: boolean;
   meta?: Partial<ProfileMeta>;
 };
 
@@ -95,4 +99,4 @@ export function hasFullConsent(profile: CustomerProfile): boolean {
   );
 }
 
-export const SCHEMA_VERSION = '1.1.0';
+export const SCHEMA_VERSION = '1.2.0';

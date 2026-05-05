@@ -51,6 +51,7 @@ export type RunDeliveryResult = {
   skipped_no_customer: number;
   skipped_no_event: number;
   skipped_no_consent: number;
+  skipped_paused: number;
   errors: number;
 };
 
@@ -64,6 +65,7 @@ function emptyResult(): RunDeliveryResult {
     skipped_no_customer: 0,
     skipped_no_event: 0,
     skipped_no_consent: 0,
+    skipped_paused: 0,
     errors: 0,
   };
 }
@@ -174,6 +176,14 @@ export async function runDelivery(
         `[delivery] no consent för ${classification.customer_orgnr} — hoppar över ${classification.id}`,
       );
       result.skipped_no_consent += 1;
+      continue;
+    }
+
+    if (profile.is_paused === true) {
+      console.warn(
+        `[delivery] paused för ${classification.customer_orgnr} — hoppar över ${classification.id}`,
+      );
+      result.skipped_paused += 1;
       continue;
     }
 
