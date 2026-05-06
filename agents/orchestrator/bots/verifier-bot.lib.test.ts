@@ -16,16 +16,22 @@ describe('verifier-bot.lib', () => {
   });
 
   describe('buildVerifierMessage', () => {
-    it('returns chat_id wrapped in <code> and points to onboard URL', () => {
-      const msg = buildVerifierMessage('544123218', 'https://kammaren.nu/watcher/start');
+    it('returns chat_id wrapped in <code> and points back to browser tab', () => {
+      const msg = buildVerifierMessage('544123218');
       expect(msg).toContain('<code>544123218</code>');
-      expect(msg).toContain('href="https://kammaren.nu/watcher/start"');
       expect(msg).toContain('Välkommen till KAMMAREN Watcher');
-      expect(msg).toContain('📋 Kopiera siffran');
+      expect(msg).toContain('webbläsarfliken');
+    });
+
+    it('contains no URL or anchor tag', () => {
+      const msg = buildVerifierMessage('544123218');
+      expect(msg).not.toContain('http');
+      expect(msg).not.toContain('<a href');
+      expect(msg).not.toContain('kammaren.nu');
     });
 
     it('escapes hostile chat_id', () => {
-      const msg = buildVerifierMessage('<script>', 'https://example.com');
+      const msg = buildVerifierMessage('<script>');
       expect(msg).toContain('<code>&lt;script&gt;</code>');
       expect(msg).not.toContain('<script>');
     });

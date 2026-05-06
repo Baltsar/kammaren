@@ -13,17 +13,17 @@ export function escapeHtml(input: string): string {
   return input.replace(/[&<>]/g, (ch) => HTML_ESCAPE[ch] ?? ch);
 }
 
-export function buildVerifierMessage(chatId: string, onboardUrl: string): string {
+// onboardUrl-parametern bevaras för bakåtkomp men används inte i meddelandet
+// längre. Användaren kommer hit via deep-link från onboarding-sidan och har
+// fliken öppen — vi behöver inte (och vill inte) skicka tillbaka en URL.
+export function buildVerifierMessage(chatId: string, _onboardUrl?: string): string {
   const safeChatId = escapeHtml(chatId);
-  const safeUrl = escapeHtml(onboardUrl);
   return [
     '👋 Välkommen till KAMMAREN Watcher!',
     '',
-    'Ditt Telegram-ID är:',
+    'Ditt Telegram-ID:',
     `<code>${safeChatId}</code>`,
     '',
-    '📋 Kopiera siffran och gå tillbaka till',
-    `<a href="${safeUrl}">kammaren.nu/watcher/start</a>`,
-    'för att slutföra registreringen.',
+    '📋 Tryck på siffran för att kopiera den, gå sedan tillbaka till webbläsarfliken där du startade onboardingen och klistra in den.',
   ].join('\n');
 }
