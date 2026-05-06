@@ -1,7 +1,7 @@
 # Integritetspolicy — KAMMAREN
 
-**Senast uppdaterad:** 2026-05-04
-**Version:** 2.0
+**Senast uppdaterad:** 2026-05-06
+**Version:** 2.1
 
 ---
 
@@ -43,7 +43,16 @@ KAMMAREN:s skatte-engine har syftet **deterministisk skatteberäkning** —
 
 - **User-Agent, Origin:** Kan loggas tillfälligt av Vercel för drift. Raderas enligt Vercels retention policy (se vercel.com/legal).
 
-### 2.4 Skatte-engine — mottagare / personuppgiftsbiträden
+### 2.4 Anonyma aggregerade räknare
+
+- **Vad:** Två heltal i Upstash Redis: `kammaren:counter:total` (totalt antal lyckade beräkningar sedan start) och `kammaren:counter:daily:YYYY-MM-DD` (antal lyckade beräkningar per dag, Stockholm-tid).
+- **Varför:** Publik transparens — kammaren.nu visar hur tjänsten används. Hjälper också drift att upptäcka avvikelser.
+- **Personuppgifter:** **Inga.** Räknarna är rena heltal utan koppling till IP, payload, User-Agent eller annan identifierande metadata. De utgör inte personuppgifter enligt GDPR art. 4.1 eftersom registrerade inte är direkt eller indirekt identifierbara.
+- **Rättslig grund:** Ej tillämpligt (ingen personuppgiftsbehandling). Driften som sådan vilar på berättigat intresse, art. 6.1.f GDPR — tjänstens drift och transparens.
+- **Lagring:** `total` saknar utgångsdatum. `daily:*` raderas automatiskt efter 90 dagar (Redis TTL).
+- **Mottagare:** Upstash Inc. (samma personuppgiftsbiträde som rate-limiting, EU-Frankfurt). Räknarna är publikt läsbara via `GET /api/verify` under fältet `stats`.
+
+### 2.5 Skatte-engine — mottagare / personuppgiftsbiträden
 
 | Leverantör | Syfte | Region | DPA |
 |-----------|-------|--------|-----|
@@ -139,7 +148,7 @@ KAMMAREN:s vault.
 ## 4. Vad KAMMAREN INTE gör
 
 - ❌ Inga cookies (skatte-engine API)
-- ❌ Ingen tracking (ingen Google Analytics, Plausible, etc.)
+- ❌ Ingen användartracking (ingen Google Analytics, Plausible, eller liknande). Endast anonyma aggregerade anropsräknare enligt § 2.4 — utan IP- eller payload-koppling.
 - ❌ Ingen automatiserad beslutfattning enligt art. 22 GDPR
 - ❌ Ingen marknadsföring
 - ❌ Ingen vidareförsäljning av personuppgifter
