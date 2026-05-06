@@ -37,14 +37,83 @@ if (IS_PROD && !HAS_UPSTASH) {
 }
 
 let ratelimit: Ratelimit | null = null;
+let counterRedis: Redis | null = null;
 
 if (HAS_UPSTASH) {
+  const redis = Redis.fromEnv();
   ratelimit = new Ratelimit({
-    redis: Redis.fromEnv(),
+    redis,
     limiter: Ratelimit.slidingWindow(60, '1 m'),
     analytics: false,
     prefix: 'kammaren:rl',
   });
+  counterRedis = redis;
+}
+
+// ── Anonyma aggregerade räknare ──────────────────────────────────────────────
+// Inga IP:n, ingen payload, inget chat_id — bara siffror. Två keys:
+//   kammaren:counter:total         → INCR per lyckad beräkning, ingen TTL
+//   kammaren:counter:daily:YYYY-MM-DD → INCR per lyckad beräkning, TTL 90 d
+// Daily key håller sig i Stockholm-tid så svenska användare ser sin "idag".
+
+const COUNTER_KEY_TOTAL = 'kammaren:counter:total';
+const COUNTER_DAILY_PREFIX = 'kammaren:counter:daily:';
+const COUNTER_DAILY_TTL_SECONDS = 90 * 24 * 60 * 60;
+
+function stockholmDateKey(d: Date = new Date()): string {
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Europe/Stockholm',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(d);
+}
+
+async function bumpCounters(): Promise<void> {
+  if (!counterRedis) return;
+  try {
+    const dailyKey = `${COUNTER_DAILY_PREFIX}${stockholmDateKey()}`;
+    const pipeline = counterRedis.pipeline();
+    pipeline.incr(COUNTER_KEY_TOTAL);
+    pipeline.incr(dailyKey);
+    pipeline.expire(dailyKey, COUNTER_DAILY_TTL_SECONDS);
+    await pipeline.exec();
+  } catch {
+    // Räknare är best-effort — får aldrig försämra svaret.
+  }
+}
+
+interface ApiStats {
+  total: number;
+  today: number;
+  last_7d: number;
+  as_of: string;
+}
+
+async function readStats(): Promise<ApiStats | null> {
+  if (!counterRedis) return null;
+  try {
+    const now = Date.now();
+    const dayMs = 24 * 60 * 60 * 1000;
+    const dailyKeys = Array.from(
+      { length: 7 },
+      (_, i) => `${COUNTER_DAILY_PREFIX}${stockholmDateKey(new Date(now - i * dayMs))}`,
+    );
+    const values = await counterRedis.mget<(string | number | null)[]>(
+      COUNTER_KEY_TOTAL,
+      ...dailyKeys,
+    );
+    const total = Number(values[0] ?? 0);
+    const dailyValues = values.slice(1).map((v) => Number(v ?? 0));
+    return {
+      total,
+      today: dailyValues[0] ?? 0,
+      last_7d: dailyValues.reduce((a, b) => a + b, 0),
+      as_of: new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
 }
 
 async function checkRateLimit(
@@ -252,12 +321,15 @@ const LEGAL = {
   disclaimer_relay_required: true,
   privacy_notice:
     'IP-adress loggas i max 24h för rate-limiting (60 req/min, art. 6.1.f GDPR, ' +
-    'Upstash Redis EU-Frankfurt). Inga payloads loggas. Se privacy_url för art. 13 GDPR.',
+    'Upstash Redis EU-Frankfurt). Inga payloads loggas. Anonyma aggregerade ' +
+    'räknare (totalt antal beräkningar + dagsräkning) hålls i Redis utan ' +
+    'IP- eller payload-koppling. Se privacy_url för art. 13 GDPR.',
 } as const;
 
 // ── Handlers ──────────────────────────────────────────────────────────────────
 
-function handleGet(res: VercelResponse): void {
+async function handleGet(res: VercelResponse): Promise<void> {
+  const stats = await readStats();
   res.status(200).json({
     skills: SKILL_METADATA,
     engine_version: '2026.1',
@@ -270,6 +342,7 @@ function handleGet(res: VercelResponse): void {
     docs: 'https://kammaren.nu/api',
     effective_date: LEGAL.effective_date,
     legislation_as_of: LEGAL.legislation_as_of,
+    ...(stats ? { stats } : {}),
     legal: LEGAL,
   });
 }
@@ -334,6 +407,9 @@ async function handlePost(req: VercelRequest, res: VercelResponse): Promise<void
     status = comparison.pass ? 'PASS' : 'FAIL';
   }
 
+  // Räkna lyckade beräkningar (CALCULATED/PASS/FAIL). 400/500 räknas inte.
+  await bumpCounters();
+
   res.status(200).json({
     status,
     skill,
@@ -368,7 +444,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   if (!allowed) return;
 
   if (req.method === 'GET') {
-    handleGet(res);
+    await handleGet(res);
     return;
   }
 
