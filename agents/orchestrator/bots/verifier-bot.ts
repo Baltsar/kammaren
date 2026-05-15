@@ -11,6 +11,9 @@
  * Deploy: Railway long-running worker. Lokalt: `bun run bot:verifier`.
  */
 
+import '../../../src/load-env.js';
+import { realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { Bot, type Context } from 'grammy';
 import { buildVerifierMessage } from './verifier-bot.lib.js';
 
@@ -59,7 +62,15 @@ async function main(): Promise<void> {
   await bot.start();
 }
 
-const isMain = import.meta.url === `file://${process.argv[1]}`;
-if (isMain) {
+function isMainEntrypoint(): boolean {
+  if (!process.argv[1]) return false;
+  try {
+    return fileURLToPath(import.meta.url) === realpathSync(process.argv[1]);
+  } catch {
+    return false;
+  }
+}
+
+if (isMainEntrypoint()) {
   void main();
 }
