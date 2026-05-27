@@ -343,7 +343,7 @@ describe('runDelivery', () => {
     });
   });
 
-  it('skickar formatterat MarkdownV2-meddelande inkluderande titel och URL', async () => {
+  it('skickar minimalt MarkdownV2-meddelande med titel + källa, URL i knappen', async () => {
     await writeJsonl(eventsPath, [
       makeEvent('e1', 'Förordning (2026:1) om moms'),
     ]);
@@ -359,11 +359,21 @@ describe('runDelivery', () => {
     });
 
     expect(send).toHaveBeenCalledOnce();
-    const [chatId, message] = send.mock.calls[0] as [string, string];
+    const [chatId, message, opts] = send.mock.calls[0] as [
+      string,
+      string,
+      { replyMarkup: { inline_keyboard: { text: string; url: string }[][] } },
+    ];
     expect(chatId).toBe('999');
-    expect(message).toContain('Förordning \\(2026:1\\) om moms');
-    expect(message).toContain('https://example.test/e1');
-    expect(message).toContain('⚠️');
+    // Titel bold-escapad, källa "Riksdagen" på rad 2.
+    expect(message).toContain('*Förordning \\(2026:1\\) om moms*');
+    expect(message).toContain('Riksdagen');
+    // URL hamnar inte i message-bodyn längre — den lever bara i knappen.
+    expect(message).not.toContain('https://example.test/e1');
+    // Knappen ska peka på event.url med label "📄 Öppna".
+    expect(opts.replyMarkup).toEqual({
+      inline_keyboard: [[{ text: '📄 Öppna', url: 'https://example.test/e1' }]],
+    });
   });
 
   it('hanterar tom classifications.jsonl utan att krascha', async () => {
@@ -501,7 +511,7 @@ describe('runDelivery', () => {
       });
 
       expect(send).toHaveBeenCalledOnce();
-      expect(send).toHaveBeenCalledWith('222', expect.any(String));
+      expect(send).toHaveBeenCalledWith('222', expect.any(String), expect.any(Object));
       expect(result.skipped_no_consent).toBe(1);
       expect(result.sent).toBe(1);
     });

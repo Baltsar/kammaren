@@ -84,4 +84,27 @@ describe('sendTelegram', () => {
       expect.anything(),
     );
   });
+
+  describe('reply_markup (URL-knappar)', () => {
+    it('skickar reply_markup när det finns i options', async () => {
+      const { client, sendMessage } = makeMockBot();
+      const replyMarkup = {
+        inline_keyboard: [[{ text: '📄 Öppna', url: 'https://example.test' }]],
+      };
+
+      await sendTelegram('123', 'msg', { client, replyMarkup });
+
+      const opts = sendMessage.mock.calls[0][2] as Record<string, unknown>;
+      expect(opts.reply_markup).toEqual(replyMarkup);
+    });
+
+    it('utelämnar reply_markup när det inte angetts — bakåtkompatibilitet', async () => {
+      const { client, sendMessage } = makeMockBot();
+
+      await sendTelegram('123', 'msg', { client });
+
+      const opts = sendMessage.mock.calls[0][2] as Record<string, unknown>;
+      expect(opts).not.toHaveProperty('reply_markup');
+    });
+  });
 });
