@@ -365,14 +365,15 @@ describe('runDelivery', () => {
       { replyMarkup: { inline_keyboard: { text: string; url: string }[][] } },
     ];
     expect(chatId).toBe('999');
-    // Titel bold-escapad, källa "Riksdagen" på rad 2.
-    expect(message).toContain('*Förordning \\(2026:1\\) om moms*');
-    expect(message).toContain('Riksdagen');
+    // Editorial: pelar-accent + bold titel på rad 1, italic meta med
+    // källa + datum på rad 2.
+    expect(message).toContain('▎ *Förordning \\(2026:1\\) om moms*');
+    expect(message).toContain('_Riksdagen  ·  1 maj_');
     // URL hamnar inte i message-bodyn längre — den lever bara i knappen.
     expect(message).not.toContain('https://example.test/e1');
-    // Knappen ska peka på event.url med label "📄 Öppna".
+    // Knappen ska peka på event.url med label "Öppna ↗".
     expect(opts.replyMarkup).toEqual({
-      inline_keyboard: [[{ text: '📄 Öppna', url: 'https://example.test/e1' }]],
+      inline_keyboard: [[{ text: 'Öppna ↗', url: 'https://example.test/e1' }]],
     });
   });
 

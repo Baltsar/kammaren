@@ -6,6 +6,7 @@ import {
   detectForbiddenWords,
   escapeMarkdownV2,
   formatNotification,
+  formatSwedishShortDate,
   sourceLabel,
 } from './format.js';
 
@@ -61,6 +62,14 @@ describe('escapeMarkdownV2', () => {
       'Förordning \\(2026:1234\\) om moms\\.',
     );
   });
+
+  it('rör inte editorial-acccent ▎ eller middle-dot · eller pil ↗', () => {
+    // Dessa unicode-tecken är inte i MarkdownV2-spec-listan och ska
+    // släppas igenom oförändrat. Annars bryts den editorial-grafiken.
+    expect(escapeMarkdownV2('▎')).toBe('▎');
+    expect(escapeMarkdownV2('·')).toBe('·');
+    expect(escapeMarkdownV2('↗')).toBe('↗');
+  });
 });
 
 describe('detectForbiddenWords', () => {
@@ -104,6 +113,43 @@ describe('sourceLabel', () => {
   });
 });
 
+describe('formatSwedishShortDate', () => {
+  it('formaterar mittenmånad utan ledande nolla — "15 apr"', () => {
+    expect(formatSwedishShortDate('2026-04-15T00:00:00.000Z')).toBe('15 apr');
+  });
+
+  it('formaterar siffra utan padding — "3 dec"', () => {
+    expect(formatSwedishShortDate('2026-12-03T12:00:00.000Z')).toBe('3 dec');
+  });
+
+  it('hanterar januari', () => {
+    expect(formatSwedishShortDate('2026-01-22T00:00:00.000Z')).toBe('22 jan');
+  });
+
+  it('hanterar december (sista månaden i array-index 11)', () => {
+    expect(formatSwedishShortDate('2026-12-31T00:00:00.000Z')).toBe('31 dec');
+  });
+
+  it('använder UTC-datum — deterministisk oavsett TZ', () => {
+    // 2026-04-15T00:00:00Z är fortfarande den 15 i UTC men kan vara 14
+    // i västra tidszoner. Vi vill att output är samma var koden än kör.
+    expect(formatSwedishShortDate('2026-04-15T00:00:00.000Z')).toBe('15 apr');
+  });
+
+  it('returnerar tom sträng för ogiltigt datum', () => {
+    expect(formatSwedishShortDate('not-a-date')).toBe('');
+    expect(formatSwedishShortDate('')).toBe('');
+  });
+
+  it('mappar alla 12 månader till svensk kortform', () => {
+    const expected = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+    for (let m = 0; m < 12; m++) {
+      const month = String(m + 1).padStart(2, '0');
+      expect(formatSwedishShortDate(`2026-${month}-15T00:00:00.000Z`)).toBe(`15 ${expected[m]}`);
+    }
+  });
+});
+
 describe('formatNotification', () => {
   it('returnerar text + replyMarkup som separata fält', () => {
     const result = formatNotification(makeClassification(), makeEvent());
@@ -112,94 +158,111 @@ describe('formatNotification', () => {
     expect(typeof result.text).toBe('string');
   });
 
-  it('renderar titeln bold och MarkdownV2-escapad', () => {
-    const { text } = formatNotification(
-      makeClassification(),
-      makeEvent({ title: 'Posta pappersdeklarationen senast 22 april' }),
-    );
-    expect(text).toContain('*Posta pappersdeklarationen senast 22 april*');
-  });
-
-  it('escapar parenteser och kolon i SFS-titlar inom bold-markörerna', () => {
-    const { text } = formatNotification(
-      makeClassification(),
-      makeEvent({ title: 'Vapenförordning (2026:409)' }),
-    );
-    expect(text).toContain('*Vapenförordning \\(2026:409\\)*');
-  });
-
-  it('visar "Skatteverket" som källa-rad när event.source = "skv"', () => {
-    const { text } = formatNotification(
-      makeClassification(),
-      makeEvent({ source: 'skv' }),
-    );
-    expect(text).toContain('Skatteverket');
-  });
-
-  it('visar "Riksdagen" som källa-rad när event.source = "riksdagen"', () => {
-    const { text } = formatNotification(
-      makeClassification(),
-      makeEvent({ source: 'riksdagen' }),
-    );
-    expect(text).toContain('Riksdagen');
-  });
-
-  it('returnerar inline_keyboard med en URL-knapp "📄 Öppna" som pekar på event.url', () => {
-    const { replyMarkup } = formatNotification(
-      makeClassification(),
-      makeEvent({ url: 'https://riksdagen.se/sfs/2026:1234' }),
-    );
-    expect(replyMarkup).toEqual({
-      inline_keyboard: [[{ text: '📄 Öppna', url: 'https://riksdagen.se/sfs/2026:1234' }]],
-    });
-  });
-
-  it('inkluderar inte URL:en som rå text i meddelandet — den ligger bara i knappen', () => {
-    const { text } = formatNotification(
-      makeClassification(),
-      makeEvent({ url: 'https://example.test/unique-url-abc' }),
-    );
-    expect(text).not.toContain('https://example.test/unique-url-abc');
-  });
-
-  describe('boilerplate-rensning', () => {
-    it('inkluderar inte den gamla "Skatte- eller regulatorisk uppdatering"-headern', () => {
-      const { text } = formatNotification(makeClassification(), makeEvent());
-      expect(text).not.toContain('Skatte');
-      expect(text).not.toContain('regulatorisk');
-    });
-
-    it('inkluderar inte "Kategori:"-raden', () => {
+  describe('editorial layout', () => {
+    it('rad 1 = pelar-accent + bold titel (▎ *<title>*)', () => {
       const { text } = formatNotification(
-        makeClassification({ tags: ['moms', 'arbetsgivare'] }),
-        makeEvent(),
+        makeClassification(),
+        makeEvent({ title: 'Posta pappersdeklarationen senast 22 april' }),
       );
-      expect(text).not.toContain('Kategori');
+      const lines = text.split('\n');
+      expect(lines[0]).toBe('▎ *Posta pappersdeklarationen senast 22 april*');
     });
 
-    it('inkluderar inte "Allvar:"-raden eller severity-emoji som ⚠️ 📌 ℹ️', () => {
+    it('rad 2 = italic meta med källa + datum (_<source>  ·  <date>_)', () => {
+      const { text } = formatNotification(
+        makeClassification(),
+        makeEvent({
+          title: 'Lag om moms',
+          source: 'skv',
+          published_at: '2026-04-22T00:00:00.000Z',
+        }),
+      );
+      const lines = text.split('\n');
+      expect(lines[1]).toBe('_Skatteverket  ·  22 apr_');
+    });
+
+    it('exakt 2 rader text vid neutral input — knappen ligger separat i reply_markup', () => {
+      const { text } = formatNotification(
+        makeClassification({ summary: 'Neutral text' }),
+        makeEvent({ title: 'SFS 2026:1234 om moms', source: 'riksdagen' }),
+      );
+      expect(text.split('\n')).toHaveLength(2);
+    });
+
+    it('escapar parenteser och kolon i SFS-titlar inom bold-markörerna', () => {
+      const { text } = formatNotification(
+        makeClassification(),
+        makeEvent({ title: 'Vapenförordning (2026:409)' }),
+      );
+      expect(text).toContain('▎ *Vapenförordning \\(2026:409\\)*');
+    });
+
+    it('utelämnar datum-segmentet när published_at är ogiltigt — meta blir bara _<source>_', () => {
+      const { text } = formatNotification(
+        makeClassification(),
+        makeEvent({ source: 'skv', published_at: 'bogus' }),
+      );
+      const lines = text.split('\n');
+      expect(lines[1]).toBe('_Skatteverket_');
+    });
+
+    it('utelämnar datum-segmentet när published_at är tom sträng', () => {
+      const { text } = formatNotification(
+        makeClassification(),
+        makeEvent({ source: 'riksdagen', published_at: '' }),
+      );
+      const lines = text.split('\n');
+      expect(lines[1]).toBe('_Riksdagen_');
+    });
+  });
+
+  describe('inline_keyboard', () => {
+    it('returnerar inline_keyboard med en URL-knapp "Öppna ↗" som pekar på event.url', () => {
+      const { replyMarkup } = formatNotification(
+        makeClassification(),
+        makeEvent({ url: 'https://riksdagen.se/sfs/2026:1234' }),
+      );
+      expect(replyMarkup).toEqual({
+        inline_keyboard: [[{ text: 'Öppna ↗', url: 'https://riksdagen.se/sfs/2026:1234' }]],
+      });
+    });
+
+    it('inkluderar inte URL:en som rå text i meddelandet — den lever bara i knappen', () => {
+      const { text } = formatNotification(
+        makeClassification(),
+        makeEvent({ url: 'https://example.test/unique-url-abc' }),
+      );
+      expect(text).not.toContain('https://example.test/unique-url-abc');
+    });
+
+    it('byter "📄"-emoji mot pil-suffix — knapptext är "Öppna ↗"', () => {
+      const { replyMarkup } = formatNotification(makeClassification(), makeEvent());
+      const button = replyMarkup.inline_keyboard[0][0];
+      expect(button.text).toBe('Öppna ↗');
+      expect(button.text).not.toContain('📄');
+    });
+  });
+
+  describe('boilerplate-rensning (oförändrat från PR #20)', () => {
+    it('inkluderar inte gamla headers/disclaimer-block', () => {
+      const { text } = formatNotification(makeClassification(), makeEvent());
+      expect(text).not.toContain('Skatte- eller');
+      expect(text).not.toContain('regulatorisk');
+      expect(text).not.toContain('Kategori');
+      expect(text).not.toContain('Allvar');
+      expect(text).not.toContain('Läs hos källan');
+      expect(text).not.toContain('Informationsnotis');
+      expect(text).not.toContain('AI-genererad');
+    });
+
+    it('inkluderar inte severity-emoji ⚠️ 📌 ℹ️', () => {
       const { text } = formatNotification(
         makeClassification({ severity: 'action_required' }),
         makeEvent(),
       );
-      expect(text).not.toContain('Allvar');
       expect(text).not.toContain('⚠️');
       expect(text).not.toContain('📌');
       expect(text).not.toContain('ℹ️');
-    });
-
-    it('inkluderar inte "🔗 Läs hos källan"-inline-länken', () => {
-      const { text } = formatNotification(makeClassification(), makeEvent());
-      expect(text).not.toContain('Läs hos källan');
-      expect(text).not.toContain('🔗');
-    });
-
-    it('inkluderar inte per-notis-disclaimer-raderna ("Informationsnotis", "AI-genererad")', () => {
-      const { text } = formatNotification(makeClassification(), makeEvent());
-      expect(text).not.toContain('Informationsnotis');
-      expect(text).not.toContain('Verifiera alltid mot primärkälla');
-      expect(text).not.toContain('AI-genererad');
-      expect(text).not.toContain('AI\\-genererad');
     });
 
     it('inkluderar inte classification.summary i meddelandet', () => {
@@ -212,12 +275,20 @@ describe('formatNotification', () => {
   });
 
   describe('forbidden-word safety net', () => {
-    it('lägger till disclaimer-raden när title innehåller förbjudet ord', () => {
+    it('lägger till disclaimer-raden MELLAN titel och meta när title innehåller förbjudet ord', () => {
       const { text } = formatNotification(
         makeClassification({ summary: 'Neutral text' }),
-        makeEvent({ title: 'Viktigt meddelande från Skatteverket' }),
+        makeEvent({
+          title: 'Viktigt meddelande',
+          source: 'skv',
+          published_at: '2026-04-22T00:00:00.000Z',
+        }),
       );
-      expect(text).toContain('_Informationstjänst, ej rådgivning\\._');
+      const lines = text.split('\n');
+      expect(lines).toHaveLength(3);
+      expect(lines[0]).toBe('▎ *Viktigt meddelande*');
+      expect(lines[1]).toBe('_Informationstjänst, ej rådgivning\\._');
+      expect(lines[2]).toBe('_Skatteverket  ·  22 apr_');
     });
 
     it('lägger till disclaimer-raden när summary innehåller förbjudet ord', () => {
@@ -246,34 +317,6 @@ describe('formatNotification', () => {
         expect(text).toContain('_Informationstjänst, ej rådgivning\\._');
       },
     );
-  });
-
-  describe('layout', () => {
-    it('formatet är exakt 2 rader (titel + källa) vid neutral input', () => {
-      // Brutal minimalism: ingen tom rad i message-bodyn. Knappen
-      // renderas separat via reply_markup och behöver ingen visuell spacing.
-      const { text } = formatNotification(
-        makeClassification({ summary: 'Neutral text' }),
-        makeEvent({ title: 'SFS 2026:1234 om moms', source: 'riksdagen' }),
-      );
-      const lines = text.split('\n');
-      expect(lines).toHaveLength(2);
-      expect(lines[0]).toBe('*SFS 2026:1234 om moms*');
-      expect(lines[1]).toBe('Riksdagen');
-    });
-
-    it('lägger disclaimer-raden mellan titel och källa när forbidden word triggras', () => {
-      // _Informationstjänst, ej rådgivning._ ska komma direkt efter titeln så
-      // läsaren ser kontexten innan källan.
-      const { text } = formatNotification(
-        makeClassification({ summary: 'Neutral text' }),
-        makeEvent({ title: 'Viktigt meddelande', source: 'skv' }),
-      );
-      const lines = text.split('\n');
-      expect(lines[0]).toBe('*Viktigt meddelande*');
-      expect(lines[1]).toBe('_Informationstjänst, ej rådgivning\\._');
-      expect(lines[2]).toBe('Skatteverket');
-    });
   });
 
   describe('input-validering', () => {

@@ -1,19 +1,29 @@
 /**
- * Bygger notifikationsmeddelande för Telegram MarkdownV2.
+ * Bygger notifikationsmeddelande för Telegram MarkdownV2 — editorial-variant.
  *
- * Designvalet (VIB-258): brutal minimalism. Notisen är två rader text +
- * en URL-knapp — titel + källa, ingenting mer. AI-genererad boilerplate
- * (severity-emoji, kategorier, per-notis-disclaimer, "läs hos källan"-länk)
- * är borta. Den enda gång ett disclaimer-element återinför sig är när
- * forbidden-word-validatorn slår till — då lägger vi in EN rad mellan
- * titel och källa: "_Informationstjänst, ej rådgivning._"
+ * Layout (VIB-258, fortsatt-tweak av PR #20):
  *
- * Legal-foundation: per-notis-disclaimer ersätts av en gångs-disclaimer
- * vid /start, /legal och TERMS som användaren accepterar under signup.
+ *   ▎ *<titel>*
+ *   _<källa>  ·  <kort-datum>_
+ *
+ *   [ Öppna ↗ ]   ← inline_keyboard URL-knapp
+ *
+ * Designvalet: pelar-accent (▎ U+258E) ger en visuell ankarpunkt utan att
+ * öka radhöjden. Italic-meta separerar källa och datum med spaced middle-dot
+ * (` · ` U+00B7) — samma typografi som The Economist använder i deras
+ * meta-rader. Knapp-suffixet ↗ (U+2197) signalerar extern-länk utan emoji.
+ *
+ * Safety net: forbidden-word-validatorn lägger fortfarande in en italic
+ * disclaimer-rad MELLAN titel och meta om LLM glider in i rådgivande språk.
+ *
+ * Legal-foundation: per-notis-disclaimer ligger en gång vid /start, /legal
+ * och TERMS-acceptans vid signup. Notisen självt har inget juridiskt brus.
  *
  * MarkdownV2 är finkänsligt: oescapeade special-tecken i fritext ger
- * 400 Bad Request från Telegram. Vi escapar all dynamisk text och
- * lägger format-markörer (`*`, `_`) som rå Markdown runt om.
+ * 400 Bad Request från Telegram. Vi escapar all dynamisk text (titel)
+ * och lägger format-markörer (`*`, `_`) som rå Markdown runt om.
+ * Unicode-glyfer (▎ · ↗ åäö) är inte i MarkdownV2-spec-listan och passerar
+ * oförändrade.
  *
  * Spec: https://core.telegram.org/bots/api#markdownv2-style
  */
@@ -24,6 +34,21 @@ import type { WatcherEvent } from '../../watcher/schema/event.js';
 // Specialtecken som måste escapas i MarkdownV2-fritext (utanför URL-parens).
 // Backslash hanteras separat eftersom det måste vara först — annars dubbel-escapas övriga.
 const MARKDOWN_V2_SPECIALS = /[_*[\]()~`>#+\-=|{}.!]/g;
+
+const MONTHS_SV = [
+  'jan',
+  'feb',
+  'mar',
+  'apr',
+  'maj',
+  'jun',
+  'jul',
+  'aug',
+  'sep',
+  'okt',
+  'nov',
+  'dec',
+] as const;
 
 /**
  * Förbjudna ord i title/summary — om något detekteras lägger vi en
@@ -91,6 +116,22 @@ export function sourceLabel(source: WatcherEvent['source']): string {
 }
 
 /**
+ * Svensk kortform för ett ISO-datum: "15 apr", "3 dec", "22 jan".
+ * Använder UTC så att output är deterministisk oavsett runtime-TZ
+ * (Railway/GitHub Actions kör UTC, dev kan vara CET — vi vill samma
+ * sträng överallt).
+ *
+ * Returnerar tom sträng om input inte är ett giltigt datum — caller
+ * får då utelämna datum-segmentet i meta-raden.
+ */
+export function formatSwedishShortDate(iso: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  return `${d.getUTCDate()} ${MONTHS_SV[d.getUTCMonth()]}`;
+}
+
+/**
  * Bygger Telegram-meddelandet för en (relevant) classification.
  * Returnerar text (MarkdownV2-formatterad) plus reply_markup med en
  * URL-knapp som pekar på event.url.
@@ -107,18 +148,21 @@ export function formatNotification(
     );
   }
 
-  const lines: string[] = [`*${escapeMarkdownV2(event.title)}*`];
+  const lines: string[] = [`▎ *${escapeMarkdownV2(event.title)}*`];
 
   if (detectForbiddenWords(event.title, classification.summary)) {
     lines.push('_Informationstjänst, ej rådgivning\\._');
   }
 
-  lines.push(sourceLabel(event.source));
+  const source = sourceLabel(event.source);
+  const date = formatSwedishShortDate(event.published_at);
+  const meta = date ? `${source}  ·  ${date}` : source;
+  lines.push(`_${meta}_`);
 
   return {
     text: lines.join('\n'),
     replyMarkup: {
-      inline_keyboard: [[{ text: '📄 Öppna', url: event.url }]],
+      inline_keyboard: [[{ text: 'Öppna ↗', url: event.url }]],
     },
   };
 }
