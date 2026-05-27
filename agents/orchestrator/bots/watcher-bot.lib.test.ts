@@ -107,6 +107,13 @@ describe('watcher-bot.lib', () => {
       expect(msg).toContain('<code>123456</code>');
       expect(msg).toContain('kammaren.nu/watcher/start');
     });
+
+    it('innehåller "ej rådgivning"-disclaimer så ny användare ser den minst en gång', () => {
+      // VIB-258: per-notis-disclaimer flyttas från varje notis till /start
+      // + /legal + TERMS. Här är /start för ny användare första kontaktpunkten.
+      const msg = buildStartUnregisteredMessage('123456');
+      expect(msg).toContain('Ej rådgivning');
+    });
   });
 
   describe('buildStartRegisteredMessage', () => {

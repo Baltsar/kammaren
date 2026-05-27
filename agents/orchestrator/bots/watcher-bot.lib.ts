@@ -77,6 +77,8 @@ export function buildStartUnregisteredMessage(chatId: string): string {
     '📋 Kopiera siffran och gå till',
     `<a href="${ONBOARD_URL}">kammaren.nu/watcher/start</a>`,
     'för att slutföra registreringen.',
+    '',
+    'Informationstjänst för svenska aktiebolag. Ej rådgivning — verifiera med revisor. /legal för villkor.',
   ].join('\n');
 }
 

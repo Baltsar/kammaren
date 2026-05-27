@@ -6,6 +6,7 @@ import {
   detectForbiddenWords,
   escapeMarkdownV2,
   formatNotification,
+  sourceLabel,
 } from './format.js';
 
 function makeClassification(overrides: Partial<Classification> = {}): Classification {
@@ -17,7 +18,7 @@ function makeClassification(overrides: Partial<Classification> = {}): Classifica
     severity: 'action_required',
     tags: ['moms'],
     matched_rules: ['moms: tax.is_vat_registered'],
-    summary: 'Berör moms — testfall utan rådgivande språk',
+    summary: 'Berör moms — neutral sammanfattning',
     classified_at: '2026-05-04T12:00:00.000Z',
     method: 'deterministic',
     ...overrides,
@@ -39,8 +40,7 @@ function makeEvent(overrides: Partial<WatcherEvent> = {}): WatcherEvent {
 }
 
 describe('escapeMarkdownV2', () => {
-  it('escapes alla 18 special-tecken som Telegram kräver i fritext', () => {
-    // Alla tecken Telegram kräver escape för i MarkdownV2 utanför kodblock.
+  it('escapar alla 18 special-tecken som Telegram kräver i fritext', () => {
     const specials = '_*[]()~`>#+-=|{}.!';
     expect(escapeMarkdownV2(specials)).toBe(
       '\\_\\*\\[\\]\\(\\)\\~\\`\\>\\#\\+\\-\\=\\|\\{\\}\\.\\!',
@@ -57,7 +57,6 @@ describe('escapeMarkdownV2', () => {
   });
 
   it('escapar SFS-titlar med parenteser och punkt korrekt', () => {
-    // Realistisk titel — formatet "Förordning (2026:1234) om något."
     expect(escapeMarkdownV2('Förordning (2026:1234) om moms.')).toBe(
       'Förordning \\(2026:1234\\) om moms\\.',
     );
@@ -66,7 +65,6 @@ describe('escapeMarkdownV2', () => {
 
 describe('detectForbiddenWords', () => {
   it('flaggar varje förbjudet ord (case-insensitive) i title eller summary', () => {
-    // Sanity: listan ska innehålla de 10 orden som mur-förstärkning #5 kräver.
     expect(FORBIDDEN_WORDS).toEqual([
       'rekommenderar',
       'bör',
@@ -81,7 +79,6 @@ describe('detectForbiddenWords', () => {
     ]);
 
     for (const word of FORBIDDEN_WORDS) {
-      // Mixed-case substring i en längre mening — ska fortfarande träffa.
       const sentence = `Lorem ipsum ${word.toUpperCase()} dolor sit amet`;
       expect(detectForbiddenWords(sentence)).toBe(true);
     }
@@ -97,161 +94,199 @@ describe('detectForbiddenWords', () => {
   });
 });
 
+describe('sourceLabel', () => {
+  it('mappar "skv" till "Skatteverket"', () => {
+    expect(sourceLabel('skv')).toBe('Skatteverket');
+  });
+
+  it('mappar "riksdagen" till "Riksdagen"', () => {
+    expect(sourceLabel('riksdagen')).toBe('Riksdagen');
+  });
+});
+
 describe('formatNotification', () => {
-  it('inkluderar emoji ⚠️ för severity=action_required', () => {
-    const msg = formatNotification(makeClassification({ severity: 'action_required' }), makeEvent());
-    expect(msg).toContain('⚠️');
-    expect(msg).toContain('action\\_required');
+  it('returnerar text + replyMarkup som separata fält', () => {
+    const result = formatNotification(makeClassification(), makeEvent());
+    expect(result).toHaveProperty('text');
+    expect(result).toHaveProperty('replyMarkup');
+    expect(typeof result.text).toBe('string');
   });
 
-  it('inkluderar emoji 📌 för severity=warning', () => {
-    const msg = formatNotification(makeClassification({ severity: 'warning' }), makeEvent());
-    expect(msg).toContain('📌');
-    expect(msg).toContain('warning');
-  });
-
-  it('inkluderar emoji ℹ️ för severity=info', () => {
-    const msg = formatNotification(makeClassification({ severity: 'info' }), makeEvent());
-    expect(msg).toContain('ℹ️');
-    expect(msg).toContain('info');
-  });
-
-  it('inkluderar escaped event-titel', () => {
-    const msg = formatNotification(
+  it('renderar titeln bold och MarkdownV2-escapad', () => {
+    const { text } = formatNotification(
       makeClassification(),
-      makeEvent({ title: 'Förordning (2026:1) om moms' }),
+      makeEvent({ title: 'Posta pappersdeklarationen senast 22 april' }),
     );
-    expect(msg).toContain('*Förordning \\(2026:1\\) om moms*');
+    expect(text).toContain('*Posta pappersdeklarationen senast 22 april*');
   });
 
-  it('inkluderar tags joined med komma och escaped', () => {
-    const msg = formatNotification(
-      makeClassification({ tags: ['moms', 'arbetsgivare'] }),
-      makeEvent(),
-    );
-    expect(msg).toContain('moms, arbetsgivare');
-  });
-
-  it('inkluderar URL som inline link med escapad URL', () => {
-    const msg = formatNotification(
+  it('escapar parenteser och kolon i SFS-titlar inom bold-markörerna', () => {
+    const { text } = formatNotification(
       makeClassification(),
-      makeEvent({ url: 'https://example.test/path?id=1' }),
+      makeEvent({ title: 'Vapenförordning (2026:409)' }),
     );
-    // Label inom [], URL inom () — special chars i URL escapas per MarkdownV2-link-regler.
-    expect(msg).toContain('[Läs hos källan]');
-    expect(msg).toContain('https://example.test/path?id=1');
+    expect(text).toContain('*Vapenförordning \\(2026:409\\)*');
   });
 
-  it('escapar parenteser i URL så att link-parsern inte stängs för tidigt', () => {
-    const msg = formatNotification(
+  it('visar "Skatteverket" som källa-rad när event.source = "skv"', () => {
+    const { text } = formatNotification(
       makeClassification(),
-      makeEvent({ url: 'https://example.test/(parens)' }),
+      makeEvent({ source: 'skv' }),
     );
-    // Parentes inuti URL måste escapas med backslash.
-    expect(msg).toContain('https://example.test/\\(parens\\)');
+    expect(text).toContain('Skatteverket');
   });
 
-  it('hanterar saknad summary defensivt utan att krascha', () => {
-    // summary kan saknas vid trasig classification — visa fallback.
-    const c = makeClassification({ summary: '' });
-    const msg = formatNotification(c, makeEvent());
-    expect(msg).toBeTypeOf('string');
-    expect(msg.length).toBeGreaterThan(0);
-  });
-
-  it('escapar special-tecken i summary', () => {
-    const msg = formatNotification(
-      makeClassification({ summary: 'Berör moms (sats 25%) — neutral text' }),
-      makeEvent(),
+  it('visar "Riksdagen" som källa-rad när event.source = "riksdagen"', () => {
+    const { text } = formatNotification(
+      makeClassification(),
+      makeEvent({ source: 'riksdagen' }),
     );
-    expect(msg).toContain('Berör moms \\(sats 25%\\) — neutral text');
+    expect(text).toContain('Riksdagen');
   });
 
-  it('returnerar en sträng med alla obligatoriska delar', () => {
-    const msg = formatNotification(
-      makeClassification({
-        severity: 'action_required',
-        tags: ['moms'],
-        summary: 'Test summary utan rådgivning',
-      }),
-      makeEvent({ title: 'Test title', url: 'https://example.test' }),
+  it('returnerar inline_keyboard med en URL-knapp "📄 Öppna" som pekar på event.url', () => {
+    const { replyMarkup } = formatNotification(
+      makeClassification(),
+      makeEvent({ url: 'https://riksdagen.se/sfs/2026:1234' }),
     );
-    expect(msg).toContain('Skatte');
-    expect(msg).toContain('Test title');
-    expect(msg).toContain('Kategori');
-    expect(msg).toContain('moms');
-    expect(msg).toContain('Allvar');
-    expect(msg).toContain('action\\_required');
-    expect(msg).toContain('Test summary utan rådgivning');
-    expect(msg).toContain('Läs hos källan');
-    expect(msg).toContain('https://example.test');
-  });
-
-  describe('legal-foundation footer', () => {
-    it('inkluderar alltid båda obligatoriska disclaimer-rader', () => {
-      const msg = formatNotification(makeClassification(), makeEvent());
-      expect(msg).toContain('⚠️ Informationsnotis — ej rådgivning');
-      expect(msg).toContain('Verifiera alltid mot primärkälla');
-      expect(msg).toContain('🤖 AI\\-genererad klassificering — kan innehålla fel');
-    });
-
-    it('inkluderar event.url som klickbar länk i disclaimer-footer', () => {
-      const msg = formatNotification(
-        makeClassification(),
-        makeEvent({ url: 'https://riksdagen.se/sfs/2026:1234' }),
-      );
-      // URL ska ligga både som visningstext (escapad) och i (...)-target.
-      expect(msg).toContain('https://riksdagen\\.se/sfs/2026:1234');
-    });
-
-    it('kastar Error om event.url saknas', () => {
-      // Tom URL → vi nekar leverans hellre än att skicka utan primärkälla.
-      expect(() =>
-        formatNotification(makeClassification(), makeEvent({ url: '' })),
-      ).toThrow(/primärkälla är obligatorisk/);
-    });
-
-    it('kastar Error om event.url är endast whitespace', () => {
-      expect(() =>
-        formatNotification(makeClassification(), makeEvent({ url: '   ' })),
-      ).toThrow(/primärkälla är obligatorisk/);
+    expect(replyMarkup).toEqual({
+      inline_keyboard: [[{ text: '📄 Öppna', url: 'https://riksdagen.se/sfs/2026:1234' }]],
     });
   });
 
-  describe('auto-warning vid förbjudna ord', () => {
-    it('lägger till OBS-rad om title innehåller förbjudet ord', () => {
-      const msg = formatNotification(
-        makeClassification({ summary: 'Neutral sammanfattning' }),
-        makeEvent({ title: 'Viktigt meddelande från Skatteverket' }),
-      );
-      expect(msg).toContain('OBS: Detta är information, inte rådgivning');
+  it('inkluderar inte URL:en som rå text i meddelandet — den ligger bara i knappen', () => {
+    const { text } = formatNotification(
+      makeClassification(),
+      makeEvent({ url: 'https://example.test/unique-url-abc' }),
+    );
+    expect(text).not.toContain('https://example.test/unique-url-abc');
+  });
+
+  describe('boilerplate-rensning', () => {
+    it('inkluderar inte den gamla "Skatte- eller regulatorisk uppdatering"-headern', () => {
+      const { text } = formatNotification(makeClassification(), makeEvent());
+      expect(text).not.toContain('Skatte');
+      expect(text).not.toContain('regulatorisk');
     });
 
-    it('lägger till OBS-rad om summary innehåller förbjudet ord', () => {
-      const msg = formatNotification(
-        makeClassification({ summary: 'Du bör kontrollera din deklaration' }),
+    it('inkluderar inte "Kategori:"-raden', () => {
+      const { text } = formatNotification(
+        makeClassification({ tags: ['moms', 'arbetsgivare'] }),
         makeEvent(),
       );
-      expect(msg).toContain('OBS: Detta är information, inte rådgivning');
+      expect(text).not.toContain('Kategori');
     });
 
-    it('hoppar över OBS-rad när varken title eller summary har förbjudet ord', () => {
-      const msg = formatNotification(
+    it('inkluderar inte "Allvar:"-raden eller severity-emoji som ⚠️ 📌 ℹ️', () => {
+      const { text } = formatNotification(
+        makeClassification({ severity: 'action_required' }),
+        makeEvent(),
+      );
+      expect(text).not.toContain('Allvar');
+      expect(text).not.toContain('⚠️');
+      expect(text).not.toContain('📌');
+      expect(text).not.toContain('ℹ️');
+    });
+
+    it('inkluderar inte "🔗 Läs hos källan"-inline-länken', () => {
+      const { text } = formatNotification(makeClassification(), makeEvent());
+      expect(text).not.toContain('Läs hos källan');
+      expect(text).not.toContain('🔗');
+    });
+
+    it('inkluderar inte per-notis-disclaimer-raderna ("Informationsnotis", "AI-genererad")', () => {
+      const { text } = formatNotification(makeClassification(), makeEvent());
+      expect(text).not.toContain('Informationsnotis');
+      expect(text).not.toContain('Verifiera alltid mot primärkälla');
+      expect(text).not.toContain('AI-genererad');
+      expect(text).not.toContain('AI\\-genererad');
+    });
+
+    it('inkluderar inte classification.summary i meddelandet', () => {
+      const { text } = formatNotification(
+        makeClassification({ summary: 'Unik summary 12345 ska inte synas' }),
+        makeEvent(),
+      );
+      expect(text).not.toContain('Unik summary 12345');
+    });
+  });
+
+  describe('forbidden-word safety net', () => {
+    it('lägger till disclaimer-raden när title innehåller förbjudet ord', () => {
+      const { text } = formatNotification(
+        makeClassification({ summary: 'Neutral text' }),
+        makeEvent({ title: 'Viktigt meddelande från Skatteverket' }),
+      );
+      expect(text).toContain('_Informationstjänst, ej rådgivning\\._');
+    });
+
+    it('lägger till disclaimer-raden när summary innehåller förbjudet ord', () => {
+      const { text } = formatNotification(
+        makeClassification({ summary: 'Du bör kontrollera din deklaration' }),
+        makeEvent({ title: 'Neutral title' }),
+      );
+      expect(text).toContain('_Informationstjänst, ej rådgivning\\._');
+    });
+
+    it('hoppar över disclaimer-raden när varken title eller summary har förbjudet ord', () => {
+      const { text } = formatNotification(
         makeClassification({ summary: 'Lag publicerades 2026-05-01' }),
         makeEvent({ title: 'SFS 2026:1234 om moms' }),
       );
-      expect(msg).not.toContain('OBS: Detta är information');
+      expect(text).not.toContain('Informationstjänst');
     });
 
     it.each(FORBIDDEN_WORDS)(
       'flaggar individuellt förbjudet ord "%s" i title',
       (word) => {
-        const msg = formatNotification(
+        const { text } = formatNotification(
           makeClassification({ summary: 'Neutral text' }),
           makeEvent({ title: `Text med ${word} i titeln` }),
         );
-        expect(msg).toContain('OBS: Detta är information, inte rådgivning');
+        expect(text).toContain('_Informationstjänst, ej rådgivning\\._');
       },
     );
+  });
+
+  describe('layout', () => {
+    it('formatet är exakt 2 rader (titel + källa) vid neutral input', () => {
+      // Brutal minimalism: ingen tom rad i message-bodyn. Knappen
+      // renderas separat via reply_markup och behöver ingen visuell spacing.
+      const { text } = formatNotification(
+        makeClassification({ summary: 'Neutral text' }),
+        makeEvent({ title: 'SFS 2026:1234 om moms', source: 'riksdagen' }),
+      );
+      const lines = text.split('\n');
+      expect(lines).toHaveLength(2);
+      expect(lines[0]).toBe('*SFS 2026:1234 om moms*');
+      expect(lines[1]).toBe('Riksdagen');
+    });
+
+    it('lägger disclaimer-raden mellan titel och källa när forbidden word triggras', () => {
+      // _Informationstjänst, ej rådgivning._ ska komma direkt efter titeln så
+      // läsaren ser kontexten innan källan.
+      const { text } = formatNotification(
+        makeClassification({ summary: 'Neutral text' }),
+        makeEvent({ title: 'Viktigt meddelande', source: 'skv' }),
+      );
+      const lines = text.split('\n');
+      expect(lines[0]).toBe('*Viktigt meddelande*');
+      expect(lines[1]).toBe('_Informationstjänst, ej rådgivning\\._');
+      expect(lines[2]).toBe('Skatteverket');
+    });
+  });
+
+  describe('input-validering', () => {
+    it('kastar Error om event.url saknas — knappen behöver en URL', () => {
+      expect(() =>
+        formatNotification(makeClassification(), makeEvent({ url: '' })),
+      ).toThrow(/url/i);
+    });
+
+    it('kastar Error om event.url är endast whitespace', () => {
+      expect(() =>
+        formatNotification(makeClassification(), makeEvent({ url: '   ' })),
+      ).toThrow(/url/i);
+    });
   });
 });

@@ -1,28 +1,25 @@
 /**
  * Bygger notifikationsmeddelande för Telegram MarkdownV2.
  *
+ * Designvalet (VIB-258): brutal minimalism. Notisen är två rader text +
+ * en URL-knapp — titel + källa, ingenting mer. AI-genererad boilerplate
+ * (severity-emoji, kategorier, per-notis-disclaimer, "läs hos källan"-länk)
+ * är borta. Den enda gång ett disclaimer-element återinför sig är när
+ * forbidden-word-validatorn slår till — då lägger vi in EN rad mellan
+ * titel och källa: "_Informationstjänst, ej rådgivning._"
+ *
+ * Legal-foundation: per-notis-disclaimer ersätts av en gångs-disclaimer
+ * vid /start, /legal och TERMS som användaren accepterar under signup.
+ *
  * MarkdownV2 är finkänsligt: oescapeade special-tecken i fritext ger
  * 400 Bad Request från Telegram. Vi escapar all dynamisk text och
- * lägger format-markörer (`*`, `_`, `[label](url)`) som rå Markdown
- * runt om — markörerna själva escapas inte.
+ * lägger format-markörer (`*`, `_`) som rå Markdown runt om.
  *
  * Spec: https://core.telegram.org/bots/api#markdownv2-style
- *
- * Legal-foundation (VIB-260): varje notis avslutas med två obligatoriska
- * disclaimer-rader (info-tjänst-flagga + AI-flagga) och en auto-varning
- * om title eller summary innehåller "rådgivande" språk. event.url är
- * obligatorisk — saknas den kastar vi för att aldrig leverera utan
- * primärkällans länk.
  */
 
-import type { Classification, Severity } from '../schema/classification.js';
+import type { Classification } from '../schema/classification.js';
 import type { WatcherEvent } from '../../watcher/schema/event.js';
-
-const SEVERITY_EMOJI: Record<Severity, string> = {
-  action_required: '⚠️',
-  warning: '📌',
-  info: 'ℹ️',
-};
 
 // Specialtecken som måste escapas i MarkdownV2-fritext (utanför URL-parens).
 // Backslash hanteras separat eftersom det måste vara först — annars dubbel-escapas övriga.
@@ -30,7 +27,7 @@ const MARKDOWN_V2_SPECIALS = /[_*[\]()~`>#+\-=|{}.!]/g;
 
 /**
  * Förbjudna ord i title/summary — om något detekteras lägger vi en
- * auto-varning i footer. Listan speglar mur-förstärkning #5: vi ska
+ * disclaimer-rad i notisen. Listan speglar mur-förstärkning #5: vi ska
  * aldrig kommunicera i rådgivande eller tidsstressande ton.
  *
  * "sista dag" är två ord och matchas som substring efter `toLowerCase`.
@@ -48,6 +45,14 @@ export const FORBIDDEN_WORDS: ReadonlyArray<string> = [
   'snart',
 ];
 
+export type InlineUrlButton = { text: string; url: string };
+export type InlineKeyboardMarkup = { inline_keyboard: InlineUrlButton[][] };
+
+export type FormattedNotification = {
+  text: string;
+  replyMarkup: InlineKeyboardMarkup;
+};
+
 /**
  * Escapar fritext för Telegram MarkdownV2. Använd på alla värden som
  * kommer från event/classification innan de injectas i mall.
@@ -59,18 +64,10 @@ export function escapeMarkdownV2(text: string): string {
 }
 
 /**
- * URL inom `[label](url)` har egna escape-regler — endast `)` och `\`
- * måste prefixas. Vi escapar även `(` defensivt så Telegrams parser
- * inte gör snedsteg om URL har balanserade parenteser.
- */
-function escapeUrlForMarkdownV2(url: string): string {
-  return url.replace(/\\/g, '\\\\').replace(/[()]/g, '\\$&');
-}
-
-/**
- * Returnerar true om `texts` innehåller något av FORBIDDEN_WORDS
+ * Returnerar true om någon `texts` innehåller något av FORBIDDEN_WORDS
  * (case-insensitive substring-match). Används för att avgöra om
- * notisen ska få en extra "OBS"-varning utöver standard-disclaimer.
+ * notisen ska få en disclaimer-rad som safety net när LLM glider in i
+ * rådgivande språk.
  */
 export function detectForbiddenWords(...texts: ReadonlyArray<string>): boolean {
   const blob = texts.map((t) => t.toLowerCase()).join(' ');
@@ -78,52 +75,50 @@ export function detectForbiddenWords(...texts: ReadonlyArray<string>): boolean {
 }
 
 /**
+ * Mänsklig label för en käll-identifierare. Visas direkt i notisen
+ * under titeln. Default-fallback returnerar raw source så vi aldrig
+ * skickar tom källa.
+ */
+export function sourceLabel(source: WatcherEvent['source']): string {
+  switch (source) {
+    case 'skv':
+      return 'Skatteverket';
+    case 'riksdagen':
+      return 'Riksdagen';
+    default:
+      return source;
+  }
+}
+
+/**
  * Bygger Telegram-meddelandet för en (relevant) classification.
- * Returnerar en MarkdownV2-formatterad sträng som kan skickas direkt
- * via `bot.api.sendMessage(chatId, msg, { parse_mode: 'MarkdownV2' })`.
+ * Returnerar text (MarkdownV2-formatterad) plus reply_markup med en
+ * URL-knapp som pekar på event.url.
  *
- * Kastar Error om event.url saknas — primärkällans länk är obligatorisk
- * för att uppfylla informationstjänst-positioneringen i TERMS § 10.
+ * Kastar Error om event.url saknas — URL-knappen kräver en länk.
  */
 export function formatNotification(
   classification: Classification,
   event: WatcherEvent,
-): string {
+): FormattedNotification {
   if (!event.url || event.url.trim().length === 0) {
     throw new Error(
-      `formatNotification: event.url saknas för event ${event.id} — primärkälla är obligatorisk`,
+      `formatNotification: event.url saknas för event ${event.id} — URL-knappen kräver en länk`,
     );
   }
 
-  const emoji = SEVERITY_EMOJI[classification.severity];
-  const title = escapeMarkdownV2(event.title);
-  const tags = escapeMarkdownV2(classification.tags.join(', '));
-  const severity = escapeMarkdownV2(classification.severity);
-  const summary = escapeMarkdownV2(classification.summary || '(ingen sammanfattning)');
-  const url = escapeUrlForMarkdownV2(event.url);
-  const urlAsText = escapeMarkdownV2(event.url);
-
-  const lines: string[] = [
-    '📋 *Skatte\\- eller regulatorisk uppdatering*',
-    '',
-    `*${title}*`,
-    '',
-    `_Kategori:_ ${tags}`,
-    `_Allvar:_ ${emoji} ${severity}`,
-    '',
-    summary,
-    '',
-    `🔗 [Läs hos källan](${url})`,
-    '',
-    `⚠️ Informationsnotis — ej rådgivning\\. Verifiera alltid mot primärkälla: [${urlAsText}](${url})`,
-    '🤖 AI\\-genererad klassificering — kan innehålla fel\\.',
-  ];
+  const lines: string[] = [`*${escapeMarkdownV2(event.title)}*`];
 
   if (detectForbiddenWords(event.title, classification.summary)) {
-    lines.push(
-      'OBS: Detta är information, inte rådgivning\\. Klicka för att verifiera mot källan\\.',
-    );
+    lines.push('_Informationstjänst, ej rådgivning\\._');
   }
 
-  return lines.join('\n');
+  lines.push(sourceLabel(event.source));
+
+  return {
+    text: lines.join('\n'),
+    replyMarkup: {
+      inline_keyboard: [[{ text: '📄 Öppna', url: event.url }]],
+    },
+  };
 }

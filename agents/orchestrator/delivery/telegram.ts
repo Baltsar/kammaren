@@ -8,12 +8,15 @@
  */
 
 import { Bot } from 'grammy';
+import type { InlineKeyboardMarkup } from './format.js';
 
 export type SendTelegramOptions = {
   /** Inject grammy Bot för tester. Default: lazy från TELEGRAM_BOT_TOKEN. */
   client?: Bot;
   /** Override token (mest för tester med riktig Bot-instans). */
   token?: string;
+  /** Telegram inline_keyboard — t.ex. URL-knapp under meddelandet. */
+  replyMarkup?: InlineKeyboardMarkup;
 };
 
 export type SendTelegramResult = {
@@ -51,10 +54,15 @@ export async function sendTelegram(
     );
   }
 
-  const response = await client.api.sendMessage(chatId, message, {
+  const apiOptions: Parameters<typeof client.api.sendMessage>[2] = {
     parse_mode: 'MarkdownV2',
     link_preview_options: { is_disabled: true },
-  });
+  };
+  if (options.replyMarkup) {
+    apiOptions.reply_markup = options.replyMarkup;
+  }
+
+  const response = await client.api.sendMessage(chatId, message, apiOptions);
 
   return { message_id: response.message_id };
 }

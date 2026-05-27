@@ -19,6 +19,7 @@ import type { CustomerProfile } from '../watcher/customer-profile/types.js';
 import { hasFullConsent } from '../watcher/customer-profile/types.js';
 import { loadExistingIds } from '../watcher/poller/dedupe.js';
 import type { WatcherEvent } from '../watcher/schema/event.js';
+import type { FormattedNotification, InlineKeyboardMarkup } from './delivery/format.js';
 import { formatNotification } from './delivery/format.js';
 import { sendTelegram } from './delivery/telegram.js';
 import type { Classification } from './schema/classification.js';
@@ -30,7 +31,12 @@ const EVENTS_PATH = path.resolve(here, '..', 'watcher', 'data', 'events.jsonl');
 const CLASSIFICATIONS_PATH = path.resolve(here, 'data', 'classifications.jsonl');
 const DELIVERIES_PATH = path.resolve(here, 'data', 'deliveries.jsonl');
 
-export type SendFn = (chatId: string, message: string) => Promise<{ message_id: number }>;
+export type SendOptions = { replyMarkup?: InlineKeyboardMarkup };
+export type SendFn = (
+  chatId: string,
+  message: string,
+  options?: SendOptions,
+) => Promise<{ message_id: number }>;
 
 export type DeliveryOptions = {
   eventsPath?: string;
@@ -101,7 +107,8 @@ function shouldDeliver(classification: Classification): boolean {
   return classification.severity === 'action_required' || classification.severity === 'warning';
 }
 
-const defaultSend: SendFn = async (chatId, message) => sendTelegram(chatId, message);
+const defaultSend: SendFn = async (chatId, message, options) =>
+  sendTelegram(chatId, message, { replyMarkup: options?.replyMarkup });
 
 export async function runDelivery(
   options: DeliveryOptions = {},
@@ -196,9 +203,9 @@ export async function runDelivery(
       continue;
     }
 
-    let message: string;
+    let formatted: FormattedNotification;
     try {
-      message = formatNotification(classification, event);
+      formatted = formatNotification(classification, event);
     } catch (err) {
       console.error(
         `[delivery] kunde inte formattera meddelande för ${classification.id}: ${(err as Error).message}`,
@@ -209,7 +216,9 @@ export async function runDelivery(
 
     let sendResult: { message_id: number };
     try {
-      sendResult = await send(chatId, message);
+      sendResult = await send(chatId, formatted.text, {
+        replyMarkup: formatted.replyMarkup,
+      });
     } catch (err) {
       console.error(
         `[delivery] sendTelegram misslyckades för ${classification.customer_orgnr} (${classification.id}): ${(err as Error).message}`,
