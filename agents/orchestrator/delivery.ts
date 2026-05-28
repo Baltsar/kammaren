@@ -14,6 +14,7 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { read as readProfile } from '../watcher/customer-profile/store.js';
 import type { CustomerProfile } from '../watcher/customer-profile/types.js';
 import { hasFullConsent } from '../watcher/customer-profile/types.js';
@@ -42,7 +43,8 @@ export type DeliveryOptions = {
   eventsPath?: string;
   classificationsPath?: string;
   deliveriesPath?: string;
-  vaultDir?: string;
+  /** Inject SupabaseClient (för tester). Default: env-backed singleton i store.ts. */
+  supabaseClient?: SupabaseClient;
   now?: () => Date;
   /** Inject Telegram-skick för tester. Default: agents/orchestrator/delivery/telegram.sendTelegram. */
   send?: SendFn;
@@ -134,7 +136,10 @@ export async function runDelivery(
     if (profileCache.has(orgnr)) return profileCache.get(orgnr) ?? null;
     let profile: CustomerProfile | null = null;
     try {
-      profile = await readProfile(orgnr, options.vaultDir ? { vaultDir: options.vaultDir } : undefined);
+      profile = await readProfile(
+        orgnr,
+        options.supabaseClient ? { client: options.supabaseClient } : undefined,
+      );
     } catch (err) {
       console.error(
         `[delivery] kunde inte läsa profil för ${orgnr}: ${(err as Error).message}`,

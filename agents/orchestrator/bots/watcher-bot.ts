@@ -16,6 +16,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Bot, type Context } from 'grammy';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { gdprDelete } from '../cli.js';
 import {
   list as listProfiles,
@@ -48,20 +49,25 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_DELIVERIES_PATH = path.resolve(here, '..', 'data', 'deliveries.jsonl');
 
 export type WatcherBotDeps = {
-  vaultDir?: string;
+  /** Inject SupabaseClient (för tester). Default: env-backed singleton i store.ts. */
+  supabaseClient?: SupabaseClient;
   deliveriesPath?: string;
   now?: () => Date;
 };
 
 type ForgetPending = { orgnr: string; expiresAt: number };
 
+function storeOpts(client?: SupabaseClient) {
+  return client ? { client } : undefined;
+}
+
 async function findProfileByChatId(
   chatId: string,
-  vaultDir?: string,
+  client?: SupabaseClient,
 ): Promise<CustomerProfile | null> {
-  const orgnrs = await listProfiles(vaultDir ? { vaultDir } : undefined);
+  const orgnrs = await listProfiles(storeOpts(client));
   for (const orgnr of orgnrs) {
-    const profile = await readProfile(orgnr, vaultDir ? { vaultDir } : undefined);
+    const profile = await readProfile(orgnr, storeOpts(client));
     if (profile?.telegram_chat_id === chatId && !profile.meta?.deleted_at) {
       return profile;
     }
@@ -114,7 +120,7 @@ async function reply(ctx: Context, text: string): Promise<void> {
 export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot {
   const bot = new Bot(token);
   const now = deps.now ?? (() => new Date());
-  const vaultDir = deps.vaultDir;
+  const supabaseClient = deps.supabaseClient;
   const deliveriesPath = deps.deliveriesPath ?? DEFAULT_DELIVERIES_PATH;
   const pendingDeletes = new Map<string, ForgetPending>();
 
@@ -131,7 +137,7 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
   bot.command('start', async (ctx) => {
     if (!ctx.chat) return;
     const chatId = String(ctx.chat.id);
-    const profile = await findProfileByChatId(chatId, vaultDir);
+    const profile = await findProfileByChatId(chatId, supabaseClient);
     if (profile) {
       await reply(ctx, buildStartRegisteredMessage(profile));
     } else {
@@ -146,7 +152,7 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
   bot.command('status', async (ctx) => {
     if (!ctx.chat) return;
     const chatId = String(ctx.chat.id);
-    const profile = await findProfileByChatId(chatId, vaultDir);
+    const profile = await findProfileByChatId(chatId, supabaseClient);
     if (!profile) {
       await reply(ctx, buildNotRegisteredMessage());
       return;
@@ -167,7 +173,7 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
   bot.command('pause', async (ctx) => {
     if (!ctx.chat) return;
     const chatId = String(ctx.chat.id);
-    const profile = await findProfileByChatId(chatId, vaultDir);
+    const profile = await findProfileByChatId(chatId, supabaseClient);
     if (!profile) {
       await reply(ctx, buildNotRegisteredMessage());
       return;
@@ -177,7 +183,7 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
       await patchProfile(
         profile.company_identity.company_registration_number,
         { is_paused: true },
-        vaultDir ? { vaultDir } : undefined,
+        storeOpts(supabaseClient),
       );
     }
     await reply(ctx, buildPauseMessage(wasPaused));
@@ -186,7 +192,7 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
   bot.command('resume', async (ctx) => {
     if (!ctx.chat) return;
     const chatId = String(ctx.chat.id);
-    const profile = await findProfileByChatId(chatId, vaultDir);
+    const profile = await findProfileByChatId(chatId, supabaseClient);
     if (!profile) {
       await reply(ctx, buildNotRegisteredMessage());
       return;
@@ -196,7 +202,7 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
       await patchProfile(
         profile.company_identity.company_registration_number,
         { is_paused: false },
-        vaultDir ? { vaultDir } : undefined,
+        storeOpts(supabaseClient),
       );
     }
     await reply(ctx, buildResumeMessage(wasActive));
@@ -209,7 +215,7 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
   bot.command('forget', async (ctx) => {
     if (!ctx.chat) return;
     const chatId = String(ctx.chat.id);
-    const profile = await findProfileByChatId(chatId, vaultDir);
+    const profile = await findProfileByChatId(chatId, supabaseClient);
     if (!profile) {
       await reply(ctx, buildNotRegisteredMessage());
       return;
@@ -232,9 +238,12 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
     const pending = getPending(chatId);
     if (pending) {
       if (text === FORGET_CONFIRM_TOKEN) {
-        const result = await gdprDelete(pending.orgnr, vaultDir ? { vaultDir } : undefined);
+        const result = await gdprDelete(
+          pending.orgnr,
+          supabaseClient ? { supabaseClient } : undefined,
+        );
         pendingDeletes.delete(chatId);
-        if (result.status === 'already_deleted') {
+        if (result.status === 'not_found') {
           await reply(ctx, buildForgetAlreadyDeletedMessage());
         } else {
           await reply(ctx, buildForgetCompletedMessage());

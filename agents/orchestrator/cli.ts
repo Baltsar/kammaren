@@ -6,20 +6,21 @@
  *   bun run gdpr export <orgnr>   → JSON till stdout med profile,
  *                                    classifications och deliveries
  *                                    för orgnr (artikel 15 GDPR).
- *   bun run gdpr delete <orgnr>   → soft-delete profilens identitets-
- *                                    fält (telegram_chat_id, consent_*_at)
- *                                    och stämplar `meta.deleted_at`.
+ *   bun run gdpr delete <orgnr>   → HARD DELETE FROM customer_profiles
+ *                                    WHERE orgnr = $1 via Supabase store.
  *                                    Append-only-loggar (classifications,
- *                                    deliveries) bevaras 30 dagar enligt
- *                                    behandlingsregistret.
+ *                                    deliveries) bevaras enligt
+ *                                    behandlingsregistret (30 dagar) men
+ *                                    profilen försvinner direkt.
  */
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   read as readProfile,
-  upsert as upsertProfile,
+  remove as removeProfile,
 } from '../watcher/customer-profile/store.js';
 import type { CustomerProfile } from '../watcher/customer-profile/types.js';
 import type { Classification } from './schema/classification.js';
@@ -32,7 +33,8 @@ const DEFAULT_DELIVERIES_PATH = path.resolve(here, 'data', 'deliveries.jsonl');
 export type CliPaths = {
   classificationsPath?: string;
   deliveriesPath?: string;
-  vaultDir?: string;
+  /** Inject SupabaseClient (för tester). Default: env-backed singleton. */
+  supabaseClient?: SupabaseClient;
 };
 
 export type ExportResult = {
@@ -46,7 +48,8 @@ export type ExportResult = {
 export type DeleteResult = {
   orgnr: string;
   deleted_at: string;
-  status: 'soft_deleted' | 'not_found' | 'already_deleted';
+  status: 'deleted' | 'not_found';
+  rows_deleted: number;
 };
 
 async function loadJsonl<T>(filePath: string): Promise<T[]> {
@@ -70,6 +73,10 @@ async function loadJsonl<T>(filePath: string): Promise<T[]> {
   return out;
 }
 
+function storeOpts(paths: CliPaths) {
+  return paths.supabaseClient ? { client: paths.supabaseClient } : undefined;
+}
+
 export async function gdprExport(
   orgnr: string,
   paths: CliPaths = {},
@@ -77,7 +84,7 @@ export async function gdprExport(
   const classificationsPath = paths.classificationsPath ?? DEFAULT_CLASSIFICATIONS_PATH;
   const deliveriesPath = paths.deliveriesPath ?? DEFAULT_DELIVERIES_PATH;
 
-  const profile = await readProfile(orgnr, paths.vaultDir ? { vaultDir: paths.vaultDir } : undefined);
+  const profile = await readProfile(orgnr, storeOpts(paths));
   const allClassifications = await loadJsonl<Classification>(classificationsPath);
   const allDeliveries = await loadJsonl<Delivery>(deliveriesPath);
 
@@ -98,42 +105,12 @@ export async function gdprDelete(
   orgnr: string,
   paths: CliPaths = {},
 ): Promise<DeleteResult> {
-  const profile = await readProfile(orgnr, paths.vaultDir ? { vaultDir: paths.vaultDir } : undefined);
-  if (!profile) {
-    return {
-      orgnr,
-      deleted_at: new Date().toISOString(),
-      status: 'not_found',
-    };
-  }
-
-  if (profile.meta?.deleted_at) {
-    return {
-      orgnr,
-      deleted_at: profile.meta.deleted_at,
-      status: 'already_deleted',
-    };
-  }
-
-  const now = new Date().toISOString();
-  const erased: CustomerProfile = {
-    ...profile,
-    telegram_chat_id: null,
-    consent_terms_accepted_at: null,
-    consent_privacy_accepted_at: null,
-    consent_b2b_acknowledged_at: null,
-    meta: {
-      ...profile.meta,
-      deleted_at: now,
-    },
-  };
-
-  await upsertProfile(orgnr, erased, paths.vaultDir ? { vaultDir: paths.vaultDir } : undefined);
-
+  const removed = await removeProfile(orgnr, storeOpts(paths));
   return {
     orgnr,
-    deleted_at: now,
-    status: 'soft_deleted',
+    deleted_at: new Date().toISOString(),
+    status: removed ? 'deleted' : 'not_found',
+    rows_deleted: removed ? 1 : 0,
   };
 }
 
@@ -141,7 +118,7 @@ const USAGE = `KAMMAREN GDPR-CLI
 
 Användning:
   bun run gdpr export <orgnr>   Exporterar profile + classifications + deliveries som JSON.
-  bun run gdpr delete <orgnr>   Soft-delete: rensar identitets-fält och stämplar deleted_at.
+  bun run gdpr delete <orgnr>   HARD DELETE FROM customer_profiles WHERE orgnr = $1.
 
 orgnr-format: XXXXXX-XXXX (svensk organisationsnummer)`;
 
@@ -182,6 +159,7 @@ export async function main(
     if (subcommand === 'delete') {
       const result = await gdprDelete(orgnr, paths);
       io.stdout(JSON.stringify(result, null, 2));
+      io.stderr(`deleted ${result.rows_deleted} rows`);
       return result.status === 'not_found' ? 1 : 0;
     }
     io.stderr(`Unknown subcommand: "${subcommand}".`);

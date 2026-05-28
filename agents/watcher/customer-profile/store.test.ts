@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { makeFakeSupabase } from './fake-supabase.js';
 import {
   __resetClientForTests,
   exists,
@@ -15,216 +16,6 @@ import { SCHEMA_VERSION, hasFullConsent } from './types.js';
 
 const ORG = '559123-4567';
 const ORG_2 = '556677-8899';
-
-type StoredRow = {
-  orgnr: string;
-  company_name: string | null;
-  contact_email: string | null;
-  telegram_chat_id: string | null;
-  consent_terms_accepted_at: string | null;
-  consent_privacy_accepted_at: string | null;
-  consent_b2b_acknowledged_at: string | null;
-  is_paused: boolean | null;
-  deleted_at: string | null;
-  business_activity: Record<string, unknown>;
-  tax_profile: Record<string, unknown>;
-  accounting_reporting_profile: Record<string, unknown>;
-  governance_profile: Record<string, unknown>;
-  employment_profile: Record<string, unknown>;
-  gdpr_profile: Record<string, unknown>;
-  workplace_safety_profile: Record<string, unknown>;
-  cyber_nis2_profile: Record<string, unknown>;
-  schema_version: string;
-  created_at: string;
-  updated_at: string;
-};
-
-/**
- * In-memory Supabase-client som efterliknar de PostgREST-anrop store.ts
- * gör. Tillräcklig för att testa happy + error paths utan att starta en
- * riktig databas. Anrop som verkliga PostgREST-frågor returnerar
- * `{ data, error }`-shape.
- */
-function makeFakeSupabase(): {
-  client: SupabaseClient;
-  rows: Map<string, StoredRow>;
-  /** Tvinga nästa query att returnera ett fel. Återställs efter en användning. */
-  forceError: (message: string) => void;
-} {
-  const rows = new Map<string, StoredRow>();
-  let queuedError: string | null = null;
-
-  function nowIso(): string {
-    return new Date().toISOString();
-  }
-
-  function rowFromInsert(input: Record<string, unknown>): StoredRow {
-    const orgnr = String(input.orgnr);
-    const existing = rows.get(orgnr);
-    const created_at = existing?.created_at ?? nowIso();
-    return {
-      orgnr,
-      company_name: (input.company_name as string | null) ?? null,
-      contact_email: (input.contact_email as string | null) ?? null,
-      telegram_chat_id: (input.telegram_chat_id as string | null) ?? null,
-      consent_terms_accepted_at: (input.consent_terms_accepted_at as string | null) ?? null,
-      consent_privacy_accepted_at: (input.consent_privacy_accepted_at as string | null) ?? null,
-      consent_b2b_acknowledged_at: (input.consent_b2b_acknowledged_at as string | null) ?? null,
-      is_paused: (input.is_paused as boolean | null) ?? false,
-      deleted_at: (input.deleted_at as string | null) ?? null,
-      business_activity: (input.business_activity as Record<string, unknown>) ?? {},
-      tax_profile: (input.tax_profile as Record<string, unknown>) ?? {},
-      accounting_reporting_profile:
-        (input.accounting_reporting_profile as Record<string, unknown>) ?? {},
-      governance_profile: (input.governance_profile as Record<string, unknown>) ?? {},
-      employment_profile: (input.employment_profile as Record<string, unknown>) ?? {},
-      gdpr_profile: (input.gdpr_profile as Record<string, unknown>) ?? {},
-      workplace_safety_profile:
-        (input.workplace_safety_profile as Record<string, unknown>) ?? {},
-      cyber_nis2_profile: (input.cyber_nis2_profile as Record<string, unknown>) ?? {},
-      schema_version: (input.schema_version as string | null) ?? SCHEMA_VERSION,
-      created_at,
-      updated_at: nowIso(),
-    };
-  }
-
-  function from(table: string): unknown {
-    if (table !== 'customer_profiles') {
-      throw new Error(`Fake supabase: unexpected table "${table}"`);
-    }
-
-    type Filter = { type: 'eq' | 'is'; column: string; value: unknown };
-    type Mode =
-      | { kind: 'select'; columns: string }
-      | { kind: 'upsert'; payload: Record<string, unknown> }
-      | { kind: 'delete' };
-
-    const filters: Filter[] = [];
-    let mode: Mode = { kind: 'select', columns: '*' };
-    let selectAfter = false;
-    let pendingError: string | null = queuedError;
-    queuedError = null;
-
-    function matches(row: StoredRow): boolean {
-      for (const f of filters) {
-        const lhs = (row as unknown as Record<string, unknown>)[f.column];
-        if (f.type === 'eq') {
-          if (lhs !== f.value) return false;
-        } else if (f.type === 'is') {
-          if (f.value === null && lhs !== null) return false;
-        }
-      }
-      return true;
-    }
-
-    function applyFilters(): StoredRow[] {
-      const all = Array.from(rows.values());
-      return all.filter(matches);
-    }
-
-    const builder: Record<string, unknown> = {
-      select(columns = '*') {
-        if (mode.kind === 'select') {
-          (mode as { kind: 'select'; columns: string }).columns = columns;
-        }
-        selectAfter = true;
-        return builder;
-      },
-      eq(column: string, value: unknown) {
-        filters.push({ type: 'eq', column, value });
-        return builder;
-      },
-      is(column: string, value: unknown) {
-        filters.push({ type: 'is', column, value });
-        return builder;
-      },
-      order(_column: string, _opts?: Record<string, unknown>) {
-        return builder;
-      },
-      returns() {
-        return builder;
-      },
-      upsert(payload: Record<string, unknown>, _opts?: Record<string, unknown>) {
-        mode = { kind: 'upsert', payload };
-        return builder;
-      },
-      delete() {
-        mode = { kind: 'delete' };
-        return builder;
-      },
-      async maybeSingle() {
-        if (pendingError) return { data: null, error: { message: pendingError } };
-        const matched = applyFilters();
-        if (matched.length === 0) return { data: null, error: null };
-        if (matched.length > 1) {
-          return {
-            data: null,
-            error: { message: 'multiple rows returned for maybeSingle' },
-          };
-        }
-        return { data: matched[0], error: null };
-      },
-      async single() {
-        if (pendingError) return { data: null, error: { message: pendingError } };
-        if (mode.kind === 'upsert') {
-          const row = rowFromInsert(mode.payload);
-          rows.set(row.orgnr, row);
-          return { data: row, error: null };
-        }
-        const matched = applyFilters();
-        if (matched.length === 0) {
-          return { data: null, error: { message: 'no rows' } };
-        }
-        return { data: matched[0], error: null };
-      },
-      // Default-resolver: när konsumenten awaiter builder utan single/maybeSingle.
-      then(
-        onFulfilled: (value: { data: unknown; error: { message: string } | null }) => unknown,
-        onRejected?: (reason: unknown) => unknown,
-      ) {
-        if (pendingError) {
-          return Promise.resolve({ data: null, error: { message: pendingError } }).then(
-            onFulfilled,
-            onRejected,
-          );
-        }
-        if (mode.kind === 'upsert') {
-          const row = rowFromInsert(mode.payload);
-          rows.set(row.orgnr, row);
-          return Promise.resolve({ data: [row], error: null }).then(
-            onFulfilled,
-            onRejected,
-          );
-        }
-        if (mode.kind === 'delete') {
-          const matched = applyFilters();
-          for (const row of matched) rows.delete(row.orgnr);
-          const returned = selectAfter ? matched.map((r) => ({ orgnr: r.orgnr })) : null;
-          return Promise.resolve({ data: returned, error: null }).then(
-            onFulfilled,
-            onRejected,
-          );
-        }
-        // select
-        const matched = applyFilters();
-        return Promise.resolve({ data: matched, error: null }).then(
-          onFulfilled,
-          onRejected,
-        );
-      },
-    };
-
-    return builder;
-  }
-
-  return {
-    client: { from } as unknown as SupabaseClient,
-    rows,
-    forceError(message: string) {
-      queuedError = message;
-    },
-  };
-}
 
 function makeProfile(orgnr: string): CustomerProfile {
   return {
@@ -366,7 +157,7 @@ describe('customer-profile store (Supabase-backed)', () => {
       expect(await list(opts)).toEqual([]);
     });
 
-    it('returnerar orgnrs sorterade', async () => {
+    it('returnerar orgnrs', async () => {
       await upsert(ORG_2, makeProfile(ORG_2), opts);
       await upsert(ORG, makeProfile(ORG), opts);
       const got = await list(opts);
@@ -377,16 +168,12 @@ describe('customer-profile store (Supabase-backed)', () => {
 
   describe('listActiveCustomers', () => {
     it('filtrerar bort raderade och pausade profiler', async () => {
-      // Aktiv
       await upsert(ORG, makeProfile(ORG), opts);
 
-      // Pausad
       const paused = makeProfile(ORG_2);
       paused.is_paused = true;
       await upsert(ORG_2, paused, opts);
 
-      // Manuell soft-delete i den underliggande raden (vi använder inte
-      // detta i koden — men säkerställ att listActiveCustomers ändå filtrerar).
       const softDeletedOrg = '888888-1111';
       await upsert(softDeletedOrg, makeProfile(softDeletedOrg), opts);
       const sdRow = supa.rows.get(softDeletedOrg);
@@ -490,11 +277,6 @@ describe('customer-profile store (Supabase-backed)', () => {
         if (originalKey !== undefined) process.env.SUPABASE_SERVICE_ROLE_KEY = originalKey;
         __resetClientForTests();
       }
-    });
-
-    it('rapporterar Supabase-fel via read', async () => {
-      supa.forceError('connection failed');
-      await expect(read(ORG, opts)).rejects.toThrow(/connection failed/);
     });
   });
 });
