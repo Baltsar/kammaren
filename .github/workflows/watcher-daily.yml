@@ -39,6 +39,11 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           LLM_PROVIDER: berget
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          # Customer profiles lever i Supabase EU (eu-north-1 Stockholm)
+          # bakom RLS deny-all. Service-role-nyckeln bypassar RLS — den
+          # läses bara här (workflow) och i Vercel-env för dashboarden.
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: bun run agents/orchestrator/pipeline.ts
 
       - name: Commit JSONL if changed
