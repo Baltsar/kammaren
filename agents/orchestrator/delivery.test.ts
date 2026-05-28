@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -9,6 +9,8 @@ import type { Delivery } from './schema/delivery.js';
 import { makeDeliveryId } from './schema/delivery.js';
 import type { CustomerProfile } from '../watcher/customer-profile/types.js';
 import { SCHEMA_VERSION } from '../watcher/customer-profile/types.js';
+import { __resetClientForTests } from '../watcher/customer-profile/store.js';
+import { makeFakeSupabase } from '../watcher/customer-profile/fake-supabase.js';
 import type { WatcherEvent } from '../watcher/schema/event.js';
 
 function makeEvent(id: string, title: string): WatcherEvent {
@@ -104,7 +106,7 @@ describe('runDelivery', () => {
   let eventsPath: string;
   let classificationsPath: string;
   let deliveriesPath: string;
-  let vaultDir: string;
+  let supa: ReturnType<typeof makeFakeSupabase>;
   let send: ReturnType<typeof vi.fn>;
 
   beforeEach(async () => {
@@ -112,8 +114,8 @@ describe('runDelivery', () => {
     eventsPath = path.join(workDir, 'events.jsonl');
     classificationsPath = path.join(workDir, 'classifications.jsonl');
     deliveriesPath = path.join(workDir, 'deliveries.jsonl');
-    vaultDir = path.join(workDir, 'vault');
-    await mkdir(vaultDir, { recursive: true });
+    supa = makeFakeSupabase();
+    __resetClientForTests();
     // Default: lyckad send som returnerar deterministisk message_id.
     send = vi.fn(async () => ({ message_id: 100 }));
   });
@@ -123,20 +125,24 @@ describe('runDelivery', () => {
     vi.restoreAllMocks();
   });
 
+  function baseOpts() {
+    return {
+      eventsPath,
+      classificationsPath,
+      deliveriesPath,
+      supabaseClient: supa.client,
+      send,
+    };
+  }
+
   it('skickar för relevant + severity=action_required', async () => {
     await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
     await writeJsonl(classificationsPath, [
       makeClassification('e1', ORG, 'action_required'),
     ]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(send).toHaveBeenCalledOnce();
     expect(result.attempted).toBe(1);
@@ -146,15 +152,9 @@ describe('runDelivery', () => {
   it('skickar för relevant + severity=warning', async () => {
     await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
     await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'warning')]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(send).toHaveBeenCalledOnce();
     expect(result.sent).toBe(1);
@@ -163,15 +163,9 @@ describe('runDelivery', () => {
   it('hoppar över severity=info (skipped_severity++)', async () => {
     await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
     await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'info')]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(send).not.toHaveBeenCalled();
     expect(result.skipped_severity).toBe(1);
@@ -183,15 +177,9 @@ describe('runDelivery', () => {
     await writeJsonl(classificationsPath, [
       makeClassification('e1', ORG, 'action_required', false),
     ]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(send).not.toHaveBeenCalled();
     expect(result.skipped_severity).toBe(1);
@@ -201,15 +189,9 @@ describe('runDelivery', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
     await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, null)));
+    supa.insertProfile(makeProfile(ORG, null));
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(send).not.toHaveBeenCalled();
     expect(result.skipped_no_chat_id).toBe(1);
@@ -219,25 +201,13 @@ describe('runDelivery', () => {
   it('idempotens — andra körning på samma classification skickar inget', async () => {
     await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
     await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
-    const first = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const first = await runDelivery(baseOpts());
     expect(first.sent).toBe(1);
     expect(send).toHaveBeenCalledOnce();
 
-    const second = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const second = await runDelivery(baseOpts());
 
     expect(send).toHaveBeenCalledOnce(); // fortfarande bara ett anrop
     expect(second.sent).toBe(0);
@@ -251,8 +221,8 @@ describe('runDelivery', () => {
       makeClassification('e1', ORG, 'action_required'),
       makeClassification('e1', ORG_2, 'action_required'),
     ]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '111')));
-    await writeFile(path.join(vaultDir, `${ORG_2}.json`), JSON.stringify(makeProfile(ORG_2, '222')));
+    supa.insertProfile(makeProfile(ORG, '111'));
+    supa.insertProfile(makeProfile(ORG_2, '222'));
 
     let calls = 0;
     send = vi.fn(async (chatId: string) => {
@@ -265,7 +235,7 @@ describe('runDelivery', () => {
       eventsPath,
       classificationsPath,
       deliveriesPath,
-      vaultDir,
+      supabaseClient: supa.client,
       send,
     });
 
@@ -278,15 +248,9 @@ describe('runDelivery', () => {
   it('hoppar över om kund-profil saknas (orphan classification)', async () => {
     await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
     await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-    // Inga profil-filer skrivna.
+    // Inga profiler insatta i supa.
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(send).not.toHaveBeenCalled();
     expect(result.skipped_no_customer).toBe(1);
@@ -295,15 +259,9 @@ describe('runDelivery', () => {
   it('hoppar över om event saknas (orphan classification utan event)', async () => {
     await writeJsonl(eventsPath, []);
     await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(send).not.toHaveBeenCalled();
     // Vi räknar saknat event som "no_customer"-kategorisering hade varit fel —
@@ -316,7 +274,7 @@ describe('runDelivery', () => {
     await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
     const c = makeClassification('e1', ORG, 'action_required');
     await writeJsonl(classificationsPath, [c]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
     send = vi.fn(async () => ({ message_id: 4242 }));
 
@@ -324,7 +282,7 @@ describe('runDelivery', () => {
       eventsPath,
       classificationsPath,
       deliveriesPath,
-      vaultDir,
+      supabaseClient: supa.client,
       send,
       now,
     });
@@ -348,15 +306,9 @@ describe('runDelivery', () => {
       makeEvent('e1', 'Förordning (2026:1) om moms'),
     ]);
     await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
-    await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    await runDelivery(baseOpts());
 
     expect(send).toHaveBeenCalledOnce();
     const [chatId, message, opts] = send.mock.calls[0] as [
@@ -381,13 +333,7 @@ describe('runDelivery', () => {
     await writeJsonl(eventsPath, []);
     await writeFile(classificationsPath, '');
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(result.attempted).toBe(0);
     expect(result.sent).toBe(0);
@@ -400,15 +346,9 @@ describe('runDelivery', () => {
       classificationsPath,
       `not-json\n${JSON.stringify(makeClassification('e1', ORG, 'action_required'))}\n`,
     );
-    await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+    supa.insertProfile(makeProfile(ORG, '999'));
 
-    const result = await runDelivery({
-      eventsPath,
-      classificationsPath,
-      deliveriesPath,
-      vaultDir,
-      send,
-    });
+    const result = await runDelivery(baseOpts());
 
     expect(send).toHaveBeenCalledOnce();
     expect(result.sent).toBe(1);
@@ -420,20 +360,9 @@ describe('runDelivery', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
       await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-      await writeFile(
-        path.join(vaultDir, `${ORG}.json`),
-        JSON.stringify(
-          makeProfile(ORG, '999', { consent_terms_accepted_at: null }),
-        ),
-      );
+      supa.insertProfile(makeProfile(ORG, '999', { consent_terms_accepted_at: null }));
 
-      const result = await runDelivery({
-        eventsPath,
-        classificationsPath,
-        deliveriesPath,
-        vaultDir,
-        send,
-      });
+      const result = await runDelivery(baseOpts());
 
       expect(send).not.toHaveBeenCalled();
       expect(result.skipped_no_consent).toBe(1);
@@ -445,20 +374,9 @@ describe('runDelivery', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
       await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-      await writeFile(
-        path.join(vaultDir, `${ORG}.json`),
-        JSON.stringify(
-          makeProfile(ORG, '999', { consent_privacy_accepted_at: null }),
-        ),
-      );
+      supa.insertProfile(makeProfile(ORG, '999', { consent_privacy_accepted_at: null }));
 
-      const result = await runDelivery({
-        eventsPath,
-        classificationsPath,
-        deliveriesPath,
-        vaultDir,
-        send,
-      });
+      const result = await runDelivery(baseOpts());
 
       expect(result.skipped_no_consent).toBe(1);
       expect(warn).toHaveBeenCalledWith(expect.stringContaining('no consent'));
@@ -468,20 +386,9 @@ describe('runDelivery', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
       await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-      await writeFile(
-        path.join(vaultDir, `${ORG}.json`),
-        JSON.stringify(
-          makeProfile(ORG, '999', { consent_b2b_acknowledged_at: null }),
-        ),
-      );
+      supa.insertProfile(makeProfile(ORG, '999', { consent_b2b_acknowledged_at: null }));
 
-      const result = await runDelivery({
-        eventsPath,
-        classificationsPath,
-        deliveriesPath,
-        vaultDir,
-        send,
-      });
+      const result = await runDelivery(baseOpts());
 
       expect(result.skipped_no_consent).toBe(1);
       expect(warn).toHaveBeenCalledWith(expect.stringContaining('no consent'));
@@ -494,22 +401,10 @@ describe('runDelivery', () => {
         makeClassification('e1', ORG, 'action_required'),
         makeClassification('e1', ORG_2, 'action_required'),
       ]);
-      await writeFile(
-        path.join(vaultDir, `${ORG}.json`),
-        JSON.stringify(makeProfile(ORG, '111', { consent: false })),
-      );
-      await writeFile(
-        path.join(vaultDir, `${ORG_2}.json`),
-        JSON.stringify(makeProfile(ORG_2, '222')),
-      );
+      supa.insertProfile(makeProfile(ORG, '111', { consent: false }));
+      supa.insertProfile(makeProfile(ORG_2, '222'));
 
-      const result = await runDelivery({
-        eventsPath,
-        classificationsPath,
-        deliveriesPath,
-        vaultDir,
-        send,
-      });
+      const result = await runDelivery(baseOpts());
 
       expect(send).toHaveBeenCalledOnce();
       expect(send).toHaveBeenCalledWith('222', expect.any(String), expect.any(Object));
@@ -520,15 +415,9 @@ describe('runDelivery', () => {
     it('skickar normalt när alla tre consent-fält är satta', async () => {
       await writeJsonl(eventsPath, [makeEvent('e1', 'Lag om moms')]);
       await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
-      await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(makeProfile(ORG, '999')));
+      supa.insertProfile(makeProfile(ORG, '999'));
 
-      const result = await runDelivery({
-        eventsPath,
-        classificationsPath,
-        deliveriesPath,
-        vaultDir,
-        send,
-      });
+      const result = await runDelivery(baseOpts());
 
       expect(send).toHaveBeenCalledOnce();
       expect(result.sent).toBe(1);
@@ -542,15 +431,9 @@ describe('runDelivery', () => {
       await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
       const paused = makeProfile(ORG, '999');
       paused.is_paused = true;
-      await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(paused));
+      supa.insertProfile(paused);
 
-      const result = await runDelivery({
-        eventsPath,
-        classificationsPath,
-        deliveriesPath,
-        vaultDir,
-        send,
-      });
+      const result = await runDelivery(baseOpts());
 
       expect(send).not.toHaveBeenCalled();
       expect(result.sent).toBe(0);
@@ -562,15 +445,9 @@ describe('runDelivery', () => {
       await writeJsonl(classificationsPath, [makeClassification('e1', ORG, 'action_required')]);
       const active = makeProfile(ORG, '999');
       active.is_paused = false;
-      await writeFile(path.join(vaultDir, `${ORG}.json`), JSON.stringify(active));
+      supa.insertProfile(active);
 
-      const result = await runDelivery({
-        eventsPath,
-        classificationsPath,
-        deliveriesPath,
-        vaultDir,
-        send,
-      });
+      const result = await runDelivery(baseOpts());
 
       expect(result.sent).toBe(1);
       expect(result.skipped_paused).toBe(0);

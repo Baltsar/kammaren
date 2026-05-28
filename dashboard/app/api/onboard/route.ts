@@ -37,7 +37,7 @@ export async function POST(req: Request): Promise<Response> {
   } catch (err) {
     console.error('[api/onboard] commit failed:', err);
     return NextResponse.json(
-      { ok: false, error: 'Kunde inte spara profilen i vault. Försök igen om en stund.' },
+      { ok: false, error: 'Kunde inte spara profilen i databasen. Försök igen om en stund.' },
       { status: 502 },
     );
   }
@@ -55,7 +55,7 @@ export async function POST(req: Request): Promise<Response> {
 
   // Audit-trail till stdout — Vercel-loggar fångar detta.
   console.info(
-    `[api/onboard] created orgnr=${profile.company_identity.company_registration_number} chat_id=${profile.telegram_chat_id} sha=${commit.sha}`,
+    `[api/onboard] created orgnr=${profile.company_identity.company_registration_number} chat_id=${profile.telegram_chat_id}`,
   );
 
   // Välkomst-notis via Watcher-bottens token (samma som delivery använder).

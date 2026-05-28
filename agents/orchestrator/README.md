@@ -149,10 +149,10 @@ Pipeline fortsätter med nästa kund. Saknat event eller saknad profil
 räknas separat (`skipped_no_event`, `skipped_no_customer`) så drift kan
 diagnosticeras.
 
-**Mottagar-mappning.** `vault/customers/<orgnr>.json` har ett top-level
-`telegram_chat_id: string | null`. `null` (eller fältet saknas) → kunden
-hoppas över och `skipped_no_chat_id++` ticks. Operatören sätter värdet
-manuellt efter att kunden bundit sin bot.
+**Mottagar-mappning.** `customer_profiles`-tabellen i Supabase EU har en
+kolumn `telegram_chat_id: text | null`. `null` (eller raden saknas) →
+kunden hoppas över och `skipped_no_chat_id++` ticks. Operatören sätter
+värdet via onboarding-flödet eller direkt i Supabase Dashboard.
 
 **Format.** MarkdownV2 med severity-emoji (`⚠️ action_required`,
 `📌 warning`, `ℹ️ info`). All dynamisk text escapas via `escapeMarkdownV2`
@@ -220,5 +220,5 @@ Båda finns i `.env.example`. CI har bägge mappade i `watcher-daily.yml`.
 - `agents/watcher/**` (Fas 1 immutable).
 - `agents/{ceo,finance,auditor,researcher}/**`.
 - `skills/**`.
-- `vault/customers/<orgnr>.json` förutom `556677-8899.json` (test-kund).
+- Tabellen `public.customer_profiles` i Supabase EU (eu-north-1 Stockholm) — skrivs av onboarding och watcher-bottens `/pause`/`/resume`/`/forget`-commands. Repot innehåller ingen customer-data längre.
 - `policies.json`, `audit.log`, `package.json`.

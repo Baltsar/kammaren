@@ -1,6 +1,7 @@
 import { appendFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { list, read } from '../watcher/customer-profile/store.js';
 import type { CustomerProfile } from '../watcher/customer-profile/types.js';
 import { loadExistingIds } from '../watcher/poller/dedupe.js';
@@ -39,7 +40,8 @@ export type RunClassifierResult = {
 export type RunClassifierOptions = {
   eventsPath?: string;
   outputPath?: string;
-  vaultDir?: string;
+  /** Inject SupabaseClient (för tests). Default: env-backed singleton i store.ts. */
+  supabaseClient?: SupabaseClient;
   now?: () => Date;
   /** Inject LlmClient (för tests). Default: makeLlmClient() från env. */
   llmClient?: LlmClient;
@@ -86,15 +88,16 @@ async function loadEvents(eventsPath: string): Promise<WatcherEvent[]> {
 }
 
 async function loadCustomers(
-  vaultDir: string | undefined,
+  client: SupabaseClient | undefined,
 ): Promise<{ customers: CustomerProfile[]; broken: number }> {
-  const orgnrs = await list(vaultDir ? { vaultDir } : undefined);
+  const storeOpts = client ? { client } : undefined;
+  const orgnrs = await list(storeOpts);
   const customers: CustomerProfile[] = [];
   let broken = 0;
 
   for (const orgnr of orgnrs) {
     try {
-      const profile = await read(orgnr, vaultDir ? { vaultDir } : undefined);
+      const profile = await read(orgnr, storeOpts);
       if (profile) customers.push(profile);
       else broken += 1;
     } catch (err) {
@@ -128,7 +131,7 @@ export async function runClassifier(
 
   const [events, customerLoad, existing] = await Promise.all([
     loadEvents(eventsPath),
-    loadCustomers(options.vaultDir),
+    loadCustomers(options.supabaseClient),
     loadExistingIds(outputPath),
   ]);
 

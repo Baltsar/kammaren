@@ -8,7 +8,8 @@ Next.js 14-app som driver onboarding-flödet på `kammaren.nu/watcher/*`.
 - Tailwind + egen "kammaren"-palett (extraherad från live `kammaren.nu`)
 - Radix UI primitiver (Checkbox, Label, Slot)
 - React Hook Form + Zod
-- Octokit för att committa kund-profiler till `vault/customers/`
+- `@supabase/supabase-js` för upsert av kund-profiler till Supabase EU
+  (`public.customer_profiles`, eu-north-1 Stockholm)
 
 ## Lokal utveckling
 
@@ -22,10 +23,11 @@ npm run dev
 
 Öppna http://localhost:3000/watcher/start.
 
-För att testa onboard-API:t mot ett riktigt repo behövs `GITHUB_PAT`
-i miljön. Annars stannar flödet vid commit-steget och returnerar 502.
-För ren UI-iteration: kommentera ut `commitProfile`-anropet i
-`app/api/onboard/route.ts` lokalt.
+För att testa onboard-API:t mot en riktig databas behövs
+`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` i miljön. Annars stannar
+flödet vid upsert-steget och returnerar 502. För ren UI-iteration:
+kommentera ut `commitProfile`-anropet i `app/api/onboard/route.ts`
+lokalt.
 
 ### Markdown-rendering
 
@@ -47,9 +49,8 @@ Setup:
 3. **Framework Preset:** Next.js (auto-detekterat)
 4. **Environment Variables:**
    - `TELEGRAM_BOT_TOKEN` — Watcher-bottens token
-   - `GITHUB_PAT` — Personal Access Token, `contents: write`
-   - (optional) `GITHUB_OWNER`, `GITHUB_REPO`, `GITHUB_BRANCH` om
-     du committar till en fork
+   - `SUPABASE_URL` — `https://<project-ref>.supabase.co`
+   - `SUPABASE_SERVICE_ROLE_KEY` — bypassar RLS, **endast serverside**
 5. **Domain routing** — tilldela en sub-path eller subdomän:
    - **Path-baserat:** Konfigurera Vercel-projektets domän till
      `kammaren.nu` med "Path Prefix" `/watcher` (då hanteras
@@ -65,7 +66,7 @@ Default i koden: path-baserat (`https://kammaren.nu/watcher/start`).
 
 | Route                      | Method | Syfte                                              |
 | -------------------------- | ------ | -------------------------------------------------- |
-| `/api/onboard`             | POST   | Tar emot full profil, validerar, committar via Octokit, skickar välkomst-notis. |
+| `/api/onboard`             | POST   | Tar emot full profil, validerar, upsertar till Supabase, skickar välkomst-notis. |
 | `/api/profile/[orgnr]`     | GET    | Minimal profil-vy för status-page (ingen consent-data exponerad). |
 
 Onboard-route är idempotent: returnerar `409 already_exists` om
@@ -93,7 +94,8 @@ dashboard/
   lib/
     luhn.ts                    # svensk orgnr-validering
     validation.ts              # Zod-schemas
-    storage.ts                 # Octokit wrapper
+    storage.ts                 # Supabase upsert + read
+    supabase.ts                # service-role-client factory
     markdown.ts                # mini MD → HTML
     telegram.ts                # tunn Telegram Bot API-klient
     utils.ts                   # cn() helper

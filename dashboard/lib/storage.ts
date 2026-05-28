@@ -1,9 +1,19 @@
-import { Octokit } from '@octokit/rest';
-import type { OnboardInput } from './validation';
+/**
+ * Storage-lager för dashboardens onboarding-flöde.
+ *
+ * Tidigare commitade vi en JSON-fil per kund till `vault/customers/`
+ * via Octokit. Repot är publikt + AGPL-3.0 — så PII (telegram_chat_id,
+ * orgnr, consent-stämplar) läckte ut på GitHub. Nu skriver vi i stället
+ * en rad i `customer_profiles` på Supabase EU (Stockholm) bakom RLS
+ * deny-all + service-role-bypass.
+ *
+ * commitProfile är en alias för upsertProfile som behåller den
+ * tidigare exporten så `app/api/onboard/route.ts` inte behöver röras
+ * mer än felmeddelandet.
+ */
 
-const GITHUB_OWNER = process.env.GITHUB_OWNER ?? 'Baltsar';
-const GITHUB_REPO = process.env.GITHUB_REPO ?? 'kammaren';
-const GITHUB_BRANCH = process.env.GITHUB_BRANCH ?? 'main';
+import { createServiceRoleClient } from './supabase';
+import type { OnboardInput } from './validation';
 
 export type CustomerProfileFile = {
   company_identity: {
@@ -31,6 +41,7 @@ export type CustomerProfileFile = {
 };
 
 export const SCHEMA_VERSION = '1.2.0';
+const TABLE = 'customer_profiles';
 
 export function buildProfilePayload(
   input: OnboardInput,
@@ -79,95 +90,115 @@ export function buildProfilePayload(
 export type CommitResult = {
   status: 'created' | 'already_exists';
   orgnr: string;
-  sha?: string;
 };
 
-function getOctokit(): Octokit {
-  const token = process.env.GITHUB_PAT;
-  if (!token) throw new Error('GITHUB_PAT saknas i env');
-  return new Octokit({ auth: token });
-}
-
-function profilePath(orgnr: string): string {
-  return `vault/customers/${orgnr}.json`;
-}
-
-export async function profileExistsOnGithub(orgnr: string): Promise<boolean> {
-  const octokit = getOctokit();
-  try {
-    await octokit.repos.getContent({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      ref: GITHUB_BRANCH,
-      path: profilePath(orgnr),
-    });
-    return true;
-  } catch (err) {
-    if ((err as { status?: number }).status === 404) return false;
-    throw err;
-  }
-}
-
-export async function commitProfile(
-  profile: CustomerProfileFile,
-): Promise<CommitResult> {
-  const octokit = getOctokit();
-  const orgnr = profile.company_identity.company_registration_number;
-  const path = profilePath(orgnr);
-
-  // Idempotens: om filen redan finns, returnera utan att skriva. Att
-  // reonboarda en befintlig kund kräver explicit /forget först.
-  const exists = await profileExistsOnGithub(orgnr);
-  if (exists) {
-    return { status: 'already_exists', orgnr };
-  }
-
-  const content = Buffer.from(`${JSON.stringify(profile, null, 2)}\n`, 'utf8').toString(
-    'base64',
-  );
-
-  const { data } = await octokit.repos.createOrUpdateFileContents({
-    owner: GITHUB_OWNER,
-    repo: GITHUB_REPO,
-    branch: GITHUB_BRANCH,
-    path,
-    message: `watcher: onboard ${orgnr}`,
-    content,
-    committer: {
-      name: 'KAMMAREN Watcher',
-      email: 'info@kammaren.nu',
-    },
-    author: {
-      name: 'KAMMAREN Watcher',
-      email: 'info@kammaren.nu',
-    },
-  });
-
+function profileToRow(profile: CustomerProfileFile): Record<string, unknown> {
   return {
-    status: 'created',
-    orgnr,
-    sha: data.commit.sha,
+    orgnr: profile.company_identity.company_registration_number,
+    company_name: profile.company_identity.company_name,
+    contact_email: profile.company_identity.contact_email ?? null,
+    business_activity: profile.business_activity,
+    tax_profile: profile.tax_profile,
+    accounting_reporting_profile: profile.accounting_reporting_profile,
+    governance_profile: profile.governance_profile,
+    employment_profile: profile.employment_profile,
+    gdpr_profile: profile.gdpr_profile,
+    workplace_safety_profile: profile.workplace_safety_profile,
+    cyber_nis2_profile: profile.cyber_nis2_profile,
+    telegram_chat_id: profile.telegram_chat_id,
+    consent_terms_accepted_at: profile.consent_terms_accepted_at,
+    consent_privacy_accepted_at: profile.consent_privacy_accepted_at,
+    consent_b2b_acknowledged_at: profile.consent_b2b_acknowledged_at,
+    is_paused: profile.is_paused,
+    schema_version: profile.meta.schema_version,
   };
 }
 
-export async function readProfileFromGithub(
+export async function profileExists(orgnr: string): Promise<boolean> {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('orgnr')
+    .eq('orgnr', orgnr)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Supabase profileExists(${orgnr}) misslyckades: ${error.message}`);
+  }
+  return data !== null;
+}
+
+export async function upsertProfile(
+  profile: CustomerProfileFile,
+): Promise<CommitResult> {
+  const orgnr = profile.company_identity.company_registration_number;
+
+  // Idempotens: om profil finns sedan tidigare, returnera utan att
+  // skriva. Att reonboarda en befintlig kund kräver explicit /forget
+  // först. Vi gör en explicit existens-koll i stället för upsert med
+  // ignoreDuplicates eftersom vi behöver kunna returnera olika status
+  // till klienten.
+  if (await profileExists(orgnr)) {
+    return { status: 'already_exists', orgnr };
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error } = await supabase.from(TABLE).insert(profileToRow(profile));
+  if (error) {
+    throw new Error(`Supabase upsertProfile(${orgnr}) misslyckades: ${error.message}`);
+  }
+  return { status: 'created', orgnr };
+}
+
+/**
+ * Backwards-compat alias så route.ts inte behöver bytas i samma commit.
+ * Borttagen i framtida cleanup.
+ */
+export const commitProfile = upsertProfile;
+
+export async function readProfileFromStore(
   orgnr: string,
 ): Promise<CustomerProfileFile | null> {
-  const octokit = getOctokit();
-  try {
-    const { data } = await octokit.repos.getContent({
-      owner: GITHUB_OWNER,
-      repo: GITHUB_REPO,
-      ref: GITHUB_BRANCH,
-      path: profilePath(orgnr),
-    });
-    if (Array.isArray(data) || data.type !== 'file' || !('content' in data)) {
-      return null;
-    }
-    const decoded = Buffer.from(data.content, 'base64').toString('utf8');
-    return JSON.parse(decoded) as CustomerProfileFile;
-  } catch (err) {
-    if ((err as { status?: number }).status === 404) return null;
-    throw err;
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase
+    .from(TABLE)
+    .select('*')
+    .eq('orgnr', orgnr)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Supabase readProfile(${orgnr}) misslyckades: ${error.message}`);
   }
+  if (!data) return null;
+
+  const row = data as Record<string, unknown>;
+  return {
+    company_identity: {
+      company_registration_number: row.orgnr as string,
+      company_name: (row.company_name as string) ?? '',
+      contact_email: (row.contact_email as string | undefined) ?? undefined,
+    },
+    business_activity: (row.business_activity as Record<string, unknown>) ?? {},
+    tax_profile: (row.tax_profile as Record<string, unknown>) ?? {},
+    accounting_reporting_profile: (row.accounting_reporting_profile as Record<string, unknown>) ?? {},
+    governance_profile: (row.governance_profile as Record<string, unknown>) ?? {},
+    employment_profile: (row.employment_profile as Record<string, unknown>) ?? {},
+    gdpr_profile: (row.gdpr_profile as Record<string, unknown>) ?? {},
+    workplace_safety_profile: (row.workplace_safety_profile as Record<string, unknown>) ?? {},
+    cyber_nis2_profile: (row.cyber_nis2_profile as Record<string, unknown>) ?? {},
+    telegram_chat_id: (row.telegram_chat_id as string) ?? '',
+    consent_terms_accepted_at: (row.consent_terms_accepted_at as string) ?? '',
+    consent_privacy_accepted_at: (row.consent_privacy_accepted_at as string) ?? '',
+    consent_b2b_acknowledged_at: (row.consent_b2b_acknowledged_at as string) ?? '',
+    is_paused: (row.is_paused as boolean) ?? false,
+    meta: {
+      schema_version: (row.schema_version as string) ?? SCHEMA_VERSION,
+      profile_last_updated_at: (row.updated_at as string) ?? new Date().toISOString(),
+    },
+  };
 }
+
+/**
+ * Backwards-compat alias så `/api/profile/[orgnr]/route.ts` fortsätter fungera.
+ */
+export const readProfileFromGithub = readProfileFromStore;

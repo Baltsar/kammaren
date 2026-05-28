@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -6,6 +6,8 @@ import { runClassifier } from './classifier.js';
 import type { WatcherEvent } from '../watcher/schema/event.js';
 import type { CustomerProfile } from '../watcher/customer-profile/types.js';
 import { SCHEMA_VERSION } from '../watcher/customer-profile/types.js';
+import { __resetClientForTests } from '../watcher/customer-profile/store.js';
+import { makeFakeSupabase } from '../watcher/customer-profile/fake-supabase.js';
 import type { LlmClient, LlmTagResult } from './llm/client.js';
 import { __resetDefaultClientForTests } from './rules/llm-tagger.js';
 import type { Tag } from './rules/categories.js';
@@ -72,18 +74,15 @@ describe('runClassifier — LLM fallback integration', () => {
   let workDir: string;
   let eventsPath: string;
   let outputPath: string;
-  let vaultDir: string;
+  let supa: ReturnType<typeof makeFakeSupabase>;
 
   beforeEach(async () => {
     workDir = await mkdtemp(path.join(tmpdir(), 'classifier-llm-'));
     eventsPath = path.join(workDir, 'events.jsonl');
     outputPath = path.join(workDir, 'classifications.jsonl');
-    vaultDir = path.join(workDir, 'vault');
-    await mkdir(vaultDir, { recursive: true });
-    await writeFile(
-      path.join(vaultDir, '556677-8899.json'),
-      JSON.stringify(makeProfile('556677-8899')),
-    );
+    supa = makeFakeSupabase();
+    __resetClientForTests();
+    supa.insertProfile(makeProfile('556677-8899'));
   });
 
   afterEach(async () => {
@@ -108,7 +107,7 @@ describe('runClassifier — LLM fallback integration', () => {
     const result = await runClassifier({
       eventsPath,
       outputPath,
-      vaultDir,
+      supabaseClient: supa.client,
       llmClient: client,
     });
 
@@ -120,10 +119,7 @@ describe('runClassifier — LLM fallback integration', () => {
   });
 
   it('cachar LLM-resultat per event över flera customers', async () => {
-    await writeFile(
-      path.join(vaultDir, '888888-1111.json'),
-      JSON.stringify(makeProfile('888888-1111')),
-    );
+    supa.insertProfile(makeProfile('888888-1111'));
 
     const events = [makeEvent('e-shared', 'Förordning (2026:99) ovanlig')];
     await writeFile(eventsPath, events.map((e) => JSON.stringify(e)).join('\n') + '\n');
@@ -135,7 +131,7 @@ describe('runClassifier — LLM fallback integration', () => {
     const result = await runClassifier({
       eventsPath,
       outputPath,
-      vaultDir,
+      supabaseClient: supa.client,
       llmClient: client,
     });
 
@@ -154,7 +150,7 @@ describe('runClassifier — LLM fallback integration', () => {
     const first = await runClassifier({
       eventsPath,
       outputPath,
-      vaultDir,
+      supabaseClient: supa.client,
       llmClient: client1,
     });
     expect(tagEvent1).toHaveBeenCalledTimes(1);
@@ -166,7 +162,7 @@ describe('runClassifier — LLM fallback integration', () => {
     const second = await runClassifier({
       eventsPath,
       outputPath,
-      vaultDir,
+      supabaseClient: supa.client,
       llmClient: client2,
     });
 
@@ -189,7 +185,7 @@ describe('runClassifier — LLM fallback integration', () => {
       'e-llm-okand': ['okand'],
     });
 
-    await runClassifier({ eventsPath, outputPath, vaultDir, llmClient: client });
+    await runClassifier({ eventsPath, outputPath, supabaseClient: supa.client, llmClient: client });
 
     const lines = (await readFile(outputPath, 'utf8')).trim().split('\n');
     const byEvent = Object.fromEntries(
@@ -215,7 +211,7 @@ describe('runClassifier — LLM fallback integration', () => {
     const result = await runClassifier({
       eventsPath,
       outputPath,
-      vaultDir,
+      supabaseClient: supa.client,
       llmClient: client,
       disableLlm: true,
     });
@@ -240,7 +236,7 @@ describe('runClassifier — LLM fallback integration', () => {
     const result = await runClassifier({
       eventsPath,
       outputPath,
-      vaultDir,
+      supabaseClient: supa.client,
       llmClient: client,
     });
 
