@@ -37,9 +37,11 @@ Två separata Railway-services:
 2. **`kammaren-bot-watcher`** — root command: `tsx agents/orchestrator/bots/watcher-bot.ts`
    Env: `TELEGRAM_BOT_TOKEN`
 
-Båda läser från `vault/customers/` som versioneras i repot. Deploy-
-trigger: push till `main` på GitHub. Cron-pipen (daglig delivery) körs
-fortsatt på GitHub Actions, inte Railway.
+Båda läser från Supabase EU (`public.customer_profiles` i eu-north-1
+Stockholm) bakom RLS deny-all + service-role-bypass. Deploy-trigger:
+push till `main` på GitHub. Cron-pipen (daglig delivery) körs fortsatt
+på GitHub Actions, inte Railway. Bägge Railway-services behöver
+`SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` som env-vars.
 
 Procfile:
 ```
@@ -57,8 +59,8 @@ Eller `railway.json` per service om du föredrar det.
 3. Verifier-boten svarar med chat_id i `<code>`-block.
 4. Användaren går tillbaka till webben, klistrar in chat_id, fyller i
    profil + 3 consent → POST `/api/onboard`.
-5. API-route skriver profilen till `vault/customers/<orgnr>.json` via
-   Octokit, skickar välkomst-notis via watcher-botens token.
+5. API-route skriver profilen till `public.customer_profiles` i Supabase EU
+   och skickar välkomst-notis via watcher-botens token.
 
 ## Commands (watcher-bot)
 

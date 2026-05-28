@@ -22,9 +22,9 @@
 | Rättslig grund | GDPR art. 6.1.a (samtycke) |
 | Kategorier av personuppgifter | Telegram-användar-ID, organisationsnummer, profil-flaggor (moms-registrerad m.m.), bekräftelse-tidsstämplar (`consent_*_at`) |
 | Kategorier av registrerade | Företrädare för svenska aktiebolag (B2B) |
-| Mottagare | Telegram FZ-LLC (kanal); inga övriga |
-| Lagringstid | Aktiv kund: så länge samtycke består. Återkallat samtycke: profil soft-deletas omedelbart, append-only-loggar bevaras i 30 dagar |
-| Säkerhetsåtgärder | TLS, vault per orgnr, atomisk skrivning via `<file>.tmp`-rename |
+| Mottagare | Supabase Inc. (databasleverantör, EU-North-1 Stockholm); Telegram FZ-LLC (notis-kanal); inga övriga |
+| Lagringstid | Aktiv kund: så länge samtycke består. Återkallat samtycke: profil HARD-DELETas omedelbart från `customer_profiles`-tabellen; append-only-loggar bevaras i 30 dagar |
+| Säkerhetsåtgärder | TLS, Supabase Row Level Security (deny-all för anon/authenticated, bypass enbart via service-role-nyckel som lever serverside), DPA med Supabase |
 
 ### 1.2 Klassificering av regulatoriska händelser
 
@@ -56,10 +56,11 @@
 
 | Leverantör | Funktion | Region | DPA-länk | Överföringsmekanism |
 |---|---|---|---|---|
+| Supabase Inc. | Hosted Postgres-databas för kund-profiler (`public.customer_profiles`) | EU-North-1 (Stockholm) | https://supabase.com/dpa | EU-intern, ej tillämpligt |
 | Berget AI (Berget Cloud AB) | Klassificering av regulatoriska händelser (95 % av LLM-anrop) | Sverige (Stockholm) | https://berget.ai/dpa | EU-intern, ej tillämpligt |
 | Anthropic PBC | Fallback-LLM | USA (AWS/GCP) | https://privacy.claude.com/en/articles/7996862-how-do-i-view-and-sign-your-data-processing-addendum-dpa | SCC (GDPR art. 46.2.c) |
 | Telegram FZ-LLC | Notisleverans | EU (Nederländerna) / Förenade Arabemiraten | https://core.telegram.org/api/terms | Telegram Bot Platform Terms |
-| GitHub Inc. | Källkod-hosting + scheduled GitHub Actions (cron-trigger för poller) | EU/USA | https://docs.github.com/site-policy/privacy-policies/github-data-protection-agreement | DPA + SCC |
+| GitHub Inc. | Källkod-hosting + scheduled GitHub Actions (cron-trigger för poller). **Innehåller ingen customer-data** — den lever i Supabase EU. | EU/USA | https://docs.github.com/site-policy/privacy-policies/github-data-protection-agreement | DPA + SCC |
 
 ---
 

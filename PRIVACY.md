@@ -1,7 +1,7 @@
 # Integritetspolicy — KAMMAREN
 
-**Senast uppdaterad:** 2026-05-06
-**Version:** 2.1
+**Senast uppdaterad:** 2026-05-28
+**Version:** 2.2
 
 ---
 
@@ -107,10 +107,15 @@ behandlas i profileringssteget.
 ### 3.4 Lagringstid
 
 - Aktiv kund: så länge samtycke består.
-- Vid återkallelse av samtycke / radering: profil tas bort omedelbart;
-  `telegram_chat_id` raderas. Klassificerings- och leveranshistorik bevaras
-  i append-only-loggar (`classifications.jsonl`, `deliveries.jsonl`)
-  i högst **30 dagar** efter radering för att uppfylla artikel 30-skyldigheten.
+- Lagringsplats: Supabase Pro i EU-North-1 (Stockholm) bakom Row Level
+  Security (RLS) — anonyma och autentiserade roller har deny-all.
+  Endast service-role-nyckeln (lever bara serverside hos KAMMAREN)
+  bypassar RLS.
+- Vid återkallelse av samtycke / radering: `DELETE FROM customer_profiles`
+  utförs omedelbart — profilen och `telegram_chat_id` försvinner direkt
+  från databasen. Klassificerings- och leveranshistorik bevaras i
+  append-only-loggar (`classifications.jsonl`, `deliveries.jsonl`) i
+  högst **30 dagar** efter radering för att uppfylla artikel 30-skyldigheten.
 - Efter 30 dagar: alla spår av användaren raderas eller pseudonymiseras.
 
 ### 3.5 AI-behandling och underbiträden
@@ -134,14 +139,16 @@ av slutanvändardata.
 
 | Leverantör | Syfte | Region | DPA |
 |---|---|---|---|
+| Supabase Inc. | Databas för kund-profiler (`public.customer_profiles`) | EU-North-1 (Stockholm) | [supabase.com/dpa](https://supabase.com/dpa) |
 | Telegram FZ-LLC | Leverans av notiser | EU (Nederländerna) / Förenade Arabemiraten | Telegram Bot Platform Terms |
 | Berget AI (Berget Cloud AB) | LLM-tagging av events | Sverige | [berget.ai/dpa](https://berget.ai/dpa) |
 | Anthropic PBC | Fallback-LLM | USA | Commercial API DPA + SCC |
-| GitHub Inc. | Hosting av källkod och scheduled GitHub Actions | EU/USA | DPA + SCC |
+| GitHub Inc. | Hosting av källkod och scheduled GitHub Actions (cron). Innehåller **ingen** customer-data — den lever i Supabase EU. | EU/USA | DPA + SCC |
 
 Telegram tar emot innehållet i notisen (myndighetsinformation, ingen
-profil-info) samt mottagarens `chat_id`. Ingen profil-data lämnar
-KAMMAREN:s vault.
+profil-info) samt mottagarens `chat_id`. Profil-data lämnar inte
+Supabase EU förutom den enskilda `telegram_chat_id` som behövs för
+varje leverans.
 
 ---
 
@@ -169,7 +176,8 @@ Som registrerad har du rätt att:
 **Watcher Cloud:** Begäran om tillgång eller radering hanteras via
 GDPR-CLI eller via `info@kammaren.nu`. Tjänsteleverantören tillhandahåller
 en JSON-export inom 30 dagar (`bun run gdpr export <orgnr>`) och
-genomför radering inom 7 dagar (`bun run gdpr delete <orgnr>`).
+genomför radering som riktig databas-DELETE inom 7 dagar
+(`bun run gdpr delete <orgnr>` → `DELETE FROM customer_profiles WHERE orgnr = $1`).
 
 **Skatte-engine:** Då tjänsten endast lagrar IP-adress ≤24 h och inte kan
 identifiera dig utan ytterligare information (t.ex. din ISP:s loggar) är
@@ -187,9 +195,11 @@ för detaljerna.
 
 - HTTPS/TLS obligatoriskt (inga HTTP-anrop).
 - Inga personuppgifter persisteras i KAMMAREN:s skatte-engine-databas (ingen sådan finns).
-- Watcher Cloud: profil-vault sparas pseudonymiserat per orgnr i versionerade
-  filer; `telegram_chat_id` är den enda direkt identifierande uppgiften och
-  raderas omedelbart vid återkallelse av samtycke.
+- Watcher Cloud: profiler lagras i Supabase Postgres (EU-North-1
+  Stockholm) bakom Row Level Security. `telegram_chat_id` är den enda
+  direkt identifierande uppgiften och raderas omedelbart vid återkallelse
+  av samtycke (`DELETE FROM customer_profiles`).
+- Supabase är krypterad at rest och in transit.
 - Upstash Redis är krypterad at rest.
 
 ## 8. Cookies
