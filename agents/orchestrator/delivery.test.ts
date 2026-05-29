@@ -295,10 +295,11 @@ describe('runDelivery', () => {
       id: makeDeliveryId(c.id, 'telegram'),
       classification_id: c.id,
       channel: 'telegram',
-      chat_id: '999',
       message_id: 4242,
       sent_at: '2026-05-04T15:30:00.000Z',
     });
+    // chat_id får INTE persisteras i deliveries.jsonl (publik repo).
+    expect(delivery).not.toHaveProperty('chat_id');
   });
 
   it('skickar minimalt MarkdownV2-meddelande med titel + källa, URL i knappen', async () => {
