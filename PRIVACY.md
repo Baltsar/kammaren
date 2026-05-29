@@ -1,7 +1,7 @@
 # Integritetspolicy — KAMMAREN
 
-**Senast uppdaterad:** 2026-05-28
-**Version:** 2.2
+**Senast uppdaterad:** 2026-05-29
+**Version:** 2.3
 
 ---
 
@@ -83,8 +83,9 @@ personuppgifter behandlas:
 Samtycke (GDPR artikel 6.1.a). Användaren lämnar samtycke vid registrering
 genom att aktivt bekräfta TERMS, PRIVACY och B2B-positioning. Samtycket
 kan återkallas när som helst utan att det påverkar lagligheten av behandling
-som skett dessförinnan. Återkallelse sker via `info@kammaren.nu` eller via
-Telegram-botens `/glömmig`-kommando.
+som skett dessförinnan. Återkallelse sker via `info@kammaren.nu` under
+alpha-fasen — Telegram-botens självservice-kommando (`/forget`) är under
+utveckling och tillsvidare ej tillgängligt.
 
 ### 3.3 Automatiserad behandling och profilering
 
@@ -113,10 +114,18 @@ behandlas i profileringssteget.
   bypassar RLS.
 - Vid återkallelse av samtycke / radering: `DELETE FROM customer_profiles`
   utförs omedelbart — profilen och `telegram_chat_id` försvinner direkt
-  från databasen. Klassificerings- och leveranshistorik bevaras i
-  append-only-loggar (`classifications.jsonl`, `deliveries.jsonl`) i
-  högst **30 dagar** efter radering för att uppfylla artikel 30-skyldigheten.
-- Efter 30 dagar: alla spår av användaren raderas eller pseudonymiseras.
+  från databasen.
+- **Pseudonymiserade loggar:** Append-only-loggarna `classifications.jsonl`
+  och `deliveries.jsonl` (publika i GitHub-repot) innehåller inga
+  direkt identifierande personuppgifter. `deliveries.jsonl` lagrar endast
+  klassificerings-referenser, kanal och leveranstid — inga Telegram-ID.
+  `classifications.jsonl` innehåller `orgnr` (offentligt företagsregisternummer
+  tillgängligt via Bolagsverket) men inte Telegram-ID eller annan
+  natural-person-identifierare.
+- Vid GDPR-radering kan vissa loggrader fortfarande referera till klassificeringar
+  som gjorts för det orgnret, men utan koppling till någon Telegram-användare
+  eller annan identifierande uppgift. För raderings-spår se
+  `agents/orchestrator/legal/treatment-register.md`.
 
 ### 3.5 AI-behandling och underbiträden
 
@@ -174,10 +183,11 @@ Som registrerad har du rätt att:
 - Lämna klagomål till **Integritetsskyddsmyndigheten** (imy.se)
 
 **Watcher Cloud:** Begäran om tillgång eller radering hanteras via
-GDPR-CLI eller via `info@kammaren.nu`. Tjänsteleverantören tillhandahåller
-en JSON-export inom 30 dagar (`bun run gdpr export <orgnr>`) och
-genomför radering som riktig databas-DELETE inom 7 dagar
-(`bun run gdpr delete <orgnr>` → `DELETE FROM customer_profiles WHERE orgnr = $1`).
+`info@kammaren.nu`. Tjänsteleverantören tillhandahåller en JSON-export
+inom 30 dagar och genomför radering som riktig databas-DELETE inom 7 dagar.
+Det interna kommandot för självservice-radering i Telegram-boten (`/forget`)
+är under utveckling och tillsvidare ej tillgängligt — använd e-post under
+alpha-fasen.
 
 **Skatte-engine:** Då tjänsten endast lagrar IP-adress ≤24 h och inte kan
 identifiera dig utan ytterligare information (t.ex. din ISP:s loggar) är
@@ -198,7 +208,9 @@ för detaljerna.
 - Watcher Cloud: profiler lagras i Supabase Postgres (EU-North-1
   Stockholm) bakom Row Level Security. `telegram_chat_id` är den enda
   direkt identifierande uppgiften och raderas omedelbart vid återkallelse
-  av samtycke (`DELETE FROM customer_profiles`).
+  av samtycke (`DELETE FROM customer_profiles`). Telegram-ID lagras INTE
+  i de publika append-only-loggarna utan endast i Supabase-databasen,
+  varifrån det raderas omedelbart vid återkallelse av samtycke.
 - Supabase är krypterad at rest och in transit.
 - Upstash Redis är krypterad at rest.
 
