@@ -92,7 +92,6 @@ describe('gdprExport', () => {
       id: makeDeliveryId(c1.id, 'telegram'),
       classification_id: c1.id,
       channel: 'telegram',
-      chat_id: '999',
       message_id: 1,
       sent_at: '2026-05-04T13:00:00.000Z',
     };
@@ -100,7 +99,6 @@ describe('gdprExport', () => {
       id: makeDeliveryId(c2.id, 'telegram'),
       classification_id: c2.id,
       channel: 'telegram',
-      chat_id: '111',
       message_id: 2,
       sent_at: '2026-05-04T13:00:00.000Z',
     };

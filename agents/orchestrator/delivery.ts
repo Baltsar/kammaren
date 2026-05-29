@@ -232,11 +232,14 @@ export async function runDelivery(
       continue;
     }
 
+    // OBS: `chat_id` persisteras AVSIKTLIGT INTE i deliveries.jsonl
+    // (publik repo). `chatId`-variabeln ovan användes bara för att
+    // anropa sendTelegram — den får inte läcka vidare till loggen.
+    // Se PRIVACY.md § 3.4.
     const delivery: Delivery = {
       id: deliveryId,
       classification_id: classification.id,
       channel: 'telegram',
-      chat_id: chatId,
       message_id: sendResult.message_id,
       sent_at: now().toISOString(),
     };

@@ -24,6 +24,7 @@ import {
   read as readProfile,
 } from '../../watcher/customer-profile/store.js';
 import type { CustomerProfile } from '../../watcher/customer-profile/types.js';
+import type { Classification } from '../schema/classification.js';
 import type { Delivery } from '../schema/delivery.js';
 import {
   FORGET_CONFIRM_TOKEN,
@@ -47,11 +48,13 @@ const TOKEN_ENV = 'TELEGRAM_BOT_TOKEN';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const DEFAULT_DELIVERIES_PATH = path.resolve(here, '..', 'data', 'deliveries.jsonl');
+const DEFAULT_CLASSIFICATIONS_PATH = path.resolve(here, '..', 'data', 'classifications.jsonl');
 
 export type WatcherBotDeps = {
   /** Inject SupabaseClient (för tester). Default: env-backed singleton i store.ts. */
   supabaseClient?: SupabaseClient;
   deliveriesPath?: string;
+  classificationsPath?: string;
   now?: () => Date;
 };
 
@@ -75,19 +78,19 @@ async function findProfileByChatId(
   return null;
 }
 
-async function loadDeliveries(deliveriesPath: string): Promise<Delivery[]> {
+async function loadJsonl<T>(filePath: string): Promise<T[]> {
   let raw: string;
   try {
-    raw = await readFile(deliveriesPath, 'utf8');
+    raw = await readFile(filePath, 'utf8');
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') return [];
     throw err;
   }
-  const out: Delivery[] = [];
+  const out: T[] = [];
   for (const line of raw.split('\n')) {
     if (!line.trim()) continue;
     try {
-      out.push(JSON.parse(line) as Delivery);
+      out.push(JSON.parse(line) as T);
     } catch {
       // best-effort, hoppa över skitrader
     }
@@ -95,14 +98,28 @@ async function loadDeliveries(deliveriesPath: string): Promise<Delivery[]> {
   return out;
 }
 
-function deliveryStatsForChat(
+/**
+ * Räknar deliveries för en given orgnr genom att gå
+ * classifications → classification_id → deliveries.
+ *
+ * Tidigare matchade vi på `delivery.chat_id` men det fältet ligger inte
+ * längre i loggen (publik repo, se PRIVACY.md § 3.4). Joinen via
+ * classifications kostar en extra fil-läsning men sparar PII-läckan.
+ */
+function deliveryStatsForOrgnr(
   deliveries: Delivery[],
-  chatId: string,
+  classifications: Classification[],
+  orgnr: string,
 ): { count: number; lastAt: Date | null } {
+  const orgnrClassificationIds = new Set(
+    classifications
+      .filter((c) => c.customer_orgnr === orgnr)
+      .map((c) => c.id),
+  );
   let count = 0;
   let lastAt: Date | null = null;
   for (const delivery of deliveries) {
-    if (delivery.chat_id !== chatId) continue;
+    if (!orgnrClassificationIds.has(delivery.classification_id)) continue;
     count += 1;
     const sent = new Date(delivery.sent_at);
     if (!lastAt || sent > lastAt) lastAt = sent;
@@ -122,6 +139,7 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
   const now = deps.now ?? (() => new Date());
   const supabaseClient = deps.supabaseClient;
   const deliveriesPath = deps.deliveriesPath ?? DEFAULT_DELIVERIES_PATH;
+  const classificationsPath = deps.classificationsPath ?? DEFAULT_CLASSIFICATIONS_PATH;
   const pendingDeletes = new Map<string, ForgetPending>();
 
   function getPending(chatId: string): ForgetPending | null {
@@ -157,8 +175,15 @@ export function createWatcherBot(token: string, deps: WatcherBotDeps = {}): Bot 
       await reply(ctx, buildNotRegisteredMessage());
       return;
     }
-    const deliveries = await loadDeliveries(deliveriesPath);
-    const stats = deliveryStatsForChat(deliveries, chatId);
+    const [deliveries, classifications] = await Promise.all([
+      loadJsonl<Delivery>(deliveriesPath),
+      loadJsonl<Classification>(classificationsPath),
+    ]);
+    const stats = deliveryStatsForOrgnr(
+      deliveries,
+      classifications,
+      profile.company_identity.company_registration_number,
+    );
     await reply(
       ctx,
       buildStatusMessage({
