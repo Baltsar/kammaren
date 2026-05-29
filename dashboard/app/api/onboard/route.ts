@@ -1,12 +1,38 @@
 import { NextResponse } from 'next/server';
 import { onboardSchema } from '@/lib/validation';
 import { buildProfilePayload, commitProfile } from '@/lib/storage';
+import { getClientIp, getOnboardRatelimiter } from '@/lib/ratelimit';
 import { sendTelegramMessage, WELCOME_MESSAGE } from '@/lib/telegram';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request): Promise<Response> {
+  // Rate-limit FÖRST — innan vi rör request-bodyn eller databasen.
+  // Spärrar DoS på Supabase-insert och Telegram-välkomstnotis (kostar
+  // en bot-API-anrop per onboarding).
+  const ip = getClientIp(req.headers);
+  const limiter = getOnboardRatelimiter();
+  const { success, limit, remaining, reset } = await limiter.limit(`onboard:${ip}`);
+  if (!success) {
+    const retryAfterSeconds = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'För många registreringar från denna IP. Försök igen senare.',
+      },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(retryAfterSeconds),
+          'X-RateLimit-Limit': String(limit),
+          'X-RateLimit-Remaining': String(remaining),
+          'X-RateLimit-Reset': String(reset),
+        },
+      },
+    );
+  }
+
   let body: unknown;
   try {
     body = await req.json();
